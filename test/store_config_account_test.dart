@@ -12,13 +12,17 @@ import 'package:bagisto_flutter/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:supabase_flutter/supabase_flutter.dart' as supabase;
 import 'package:graphql_flutter/graphql_flutter.dart';
 
 import 'store_config_fakes.dart';
 
 AuthBloc _authBloc() => AuthBloc(
-  repository: AuthRepository(client: SupabaseClient('https://example.supabase.co', 'test-anon-key')),
+  repository: AuthRepository(client: supabase.SupabaseClient(
+                'https://example.supabase.co',
+                'test-anon-key',
+                authOptions: const supabase.AuthClientOptions(autoRefreshToken: false),
+              )),
 );
 
 Future<void> _pumpMenu(WidgetTester tester, StoreConfigCubit cubit) async {
@@ -108,7 +112,11 @@ void wishlistSectionTests() {
 }
 
 class _RecordingAuthRepository extends AuthRepository {
-  _RecordingAuthRepository() : super(client: SupabaseClient('https://example.supabase.co', 'test-anon-key'));
+  _RecordingAuthRepository() : super(client: supabase.SupabaseClient(
+                'https://example.supabase.co',
+                'test-anon-key',
+                authOptions: const supabase.AuthClientOptions(autoRefreshToken: false),
+              ));
 
   bool? subscribed;
 

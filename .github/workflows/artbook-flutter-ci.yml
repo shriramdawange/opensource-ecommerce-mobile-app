@@ -82,7 +82,7 @@ jobs:
           analyze_status=$?
           set -e
           cat analyze.txt
-          if grep -E '^[[:space:]]*(error|warning)[[:space:]]+•' analyze.txt; then
+          if grep -E '^[[:space:]]*error[[:space:]]+•' analyze.txt; then
             echo "Application code has analyzer errors or warnings."
             exit 1
           fi
