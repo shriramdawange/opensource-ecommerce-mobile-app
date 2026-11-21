@@ -64,6 +64,82 @@ Deno.serve(async (req: Request) => {
       return json({ error: "APPROVAL_ID_AND_VALID_DECISION_REQUIRED" }, 400);
     }
 
+    // If the artisan is approving publication, move private draft media
+    // into the public product bucket before the product becomes visible.
+    const movedMedia: Array<{ id: string; oldPath: string; newPath: string }> = [];
+    let publishProductId: string | null = null;
+
+    if (decision === "approve") {
+      const { data: approval, error: approvalReadError } = await ctx.admin
+        .from("agent_approvals")
+        .select("id,owner_user_id,action_type,status,payload")
+        .eq("id", approvalId)
+        .maybeSingle();
+
+      if (approvalReadError || !approval) {
+        return json({ error: "APPROVAL_NOT_FOUND" }, 404);
+      }
+      if (approval.owner_user_id !== ctx.user.id) {
+        return json({ error: "APPROVAL_NOT_OWNED_BY_USER" }, 403);
+      }
+      if (approval.status !== "pending") {
+        return json({ error: "APPROVAL_NOT_PENDING" }, 409);
+      }
+
+      if (approval.action_type === "publish_listing") {
+        publishProductId = String(approval.payload?.product_id ?? "");
+        if (!publishProductId) return json({ error: "PRODUCT_ID_REQUIRED" }, 400);
+
+        const { data: mediaRows, error: mediaReadError } = await ctx.admin
+          .from("product_media")
+          .select("id,storage_path,storage_bucket")
+          .eq("product_id", publishProductId);
+
+        if (mediaReadError) throw mediaReadError;
+
+        for (const media of mediaRows ?? []) {
+          const oldBucket = String(media.storage_bucket ?? "artbook-product-media");
+          const oldPath = String(media.storage_path);
+          if (oldBucket !== "artbook-agent-intake") continue;
+
+          if (!oldPath.startsWith(ctx.user.id + "/")) {
+            throw new Error("PRIVATE_MEDIA_NOT_OWNED_BY_ARTISAN");
+          }
+
+          const { data: blob, error: downloadError } = await ctx.admin.storage
+            .from("artbook-agent-intake")
+            .download(oldPath);
+          if (downloadError || !blob) throw new Error("PRIVATE_MEDIA_DOWNLOAD_FAILED");
+
+          const safeName = oldPath.split("/").pop() ?? "craft-image";
+          const newPath = ctx.user.id + "/" + publishProductId + "/" +
+            crypto.randomUUID() + "-" + safeName;
+
+          const { error: uploadError } = await ctx.admin.storage
+            .from("artbook-product-media")
+            .upload(newPath, new Uint8Array(await blob.arrayBuffer()), {
+              contentType: blob.type || "image/jpeg",
+              upsert: false,
+            });
+          if (uploadError) throw new Error("PUBLIC_MEDIA_UPLOAD_FAILED");
+
+          const { error: updateMediaError } = await ctx.admin
+            .from("product_media")
+            .update({
+              storage_path: newPath,
+              storage_bucket: "artbook-product-media",
+            })
+            .eq("id", media.id);
+          if (updateMediaError) {
+            await ctx.admin.storage.from("artbook-product-media").remove([newPath]);
+            throw updateMediaError;
+          }
+
+          movedMedia.push({ id: String(media.id), oldPath, newPath });
+        }
+      }
+    }
+
     const { data, error } = await ctx.admin.rpc("artbook_decide_approval", {
       p_approval_id: approvalId,
       p_owner_user_id: ctx.user.id,
@@ -71,6 +147,14 @@ Deno.serve(async (req: Request) => {
     });
 
     if (error) {
+      // Compensate the storage copy if the approval transaction failed.
+      for (const moved of movedMedia.reverse()) {
+        await ctx.admin.from("product_media").update({
+          storage_path: moved.oldPath,
+          storage_bucket: "artbook-agent-intake",
+        }).eq("id", moved.id);
+        await ctx.admin.storage.from("artbook-product-media").remove([moved.newPath]);
+      }
       const message = error.message ?? "APPROVAL_FAILED";
       const known = [
         "APPROVAL_NOT_FOUND",
@@ -93,6 +177,12 @@ Deno.serve(async (req: Request) => {
         error: code ?? "APPROVAL_FAILED",
         message: code ?? "The approval could not be completed.",
       }, code ? 409 : 500);
+    }
+
+    // Remove private draft copies only after the approval transaction succeeded.
+    if (decision === "approve" && publishProductId && movedMedia.length > 0) {
+      const oldPaths = movedMedia.map((item) => item.oldPath);
+      await ctx.admin.storage.from("artbook-agent-intake").remove(oldPaths);
     }
 
     return json(data);
