@@ -117,7 +117,7 @@ class _ArtBookProductDetailPageState extends State<ArtBookProductDetailPage> {
           ),
           const SizedBox(height: 8),
           Text(
-            '₹\${product['price'] ?? '—'}',
+            '₹${product['price'] ?? '—'}',
             style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w900, color: Color(0xFF6F3E2B)),
           ),
           const SizedBox(height: 8),
@@ -143,7 +143,7 @@ class _ArtBookProductDetailPageState extends State<ArtBookProductDetailPage> {
           if ((artisan['craft_region'] ?? '').toString().isNotEmpty) ...[
             const SizedBox(height: 4),
             Text(
-              'Craft region: \${artisan['craft_region']}',
+              'Craft region: ${artisan['craft_region']}',
               style: const TextStyle(color: Color(0xFF8B735F), fontSize: 12),
             ),
           ],
