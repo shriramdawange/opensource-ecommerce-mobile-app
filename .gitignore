@@ -70,3 +70,15 @@ assets/ml/
 # **/GoogleService-Info.plist
 # !android/app/google-services.json
 # !ios/Runner/GoogleService-Info.plist
+
+
+# Supabase and API secrets
+.env
+.env.*
+!.env.example
+supabase/.env
+supabase/.env.*
+!supabase/.env.example
+supabase/functions/.env
+supabase/functions/.env.*
+!supabase/functions/.env.example
