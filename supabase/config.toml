@@ -1,0 +1,22 @@
+project_id = "csyazvpfgbulczbrfnpu"
+
+[functions.artbook-agent]
+verify_jwt = true
+
+[functions.price-guidance]
+verify_jwt = true
+
+[functions.buyer-matching]
+verify_jwt = true
+
+[functions.place-order]
+verify_jwt = true
+
+[functions.agent-approval]
+verify_jwt = true
+
+[functions.save-listing-draft]
+verify_jwt = true
+
+[functions.request-listing-publication]
+verify_jwt = true
