@@ -31,6 +31,7 @@ import '../pages/wishlist_page.dart';
 import '../widgets/account_menu_item.dart';
 import '../../../../core/widgets/app_back_button.dart';
 import '../../../../core/store_config/store_config.dart';
+import '../../../artisan/presentation/pages/artisan_onboarding_page.dart';
 
 /// Account Menu Page — Figma node-id=220-6770
 ///
@@ -265,6 +266,19 @@ class _AccountMenuBody extends StatelessWidget {
             ),
           ),
 
+          // ArtBook artisan identity and onboarding.
+          AccountMenuItem(
+            label: 'Artisan Profile',
+            trailingIcon: Icons.storefront_outlined,
+            onTap: () {
+              Navigator.of(context).push(
+                MaterialPageRoute(
+                  builder: (_) => const ArtisanOnboardingPage(),
+                ),
+              );
+            },
+          ),
+          const SizedBox(height: 2),
           // Menu items with 2px gap — Figma gap: 2px
           AccountMenuItem(
             label: l10n.accountMyOrders,
