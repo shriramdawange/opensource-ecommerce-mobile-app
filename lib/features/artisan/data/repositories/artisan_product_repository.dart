@@ -114,7 +114,7 @@ class ArtisanProductRepository {
     final safeFileName = fileName.replaceAll(RegExp(r'[^a-zA-Z0-9._-]'), '_');
     final path = '$_userId/$productId/${DateTime.now().microsecondsSinceEpoch}_$safeFileName';
 
-    await client.storage.from('artbook-product-media').uploadBinary(
+    await client.storage.from('artbook-agent-intake').uploadBinary(
       path,
       bytes,
       fileOptions: FileOptions(contentType: contentType, upsert: false),
@@ -130,6 +130,7 @@ class ArtisanProductRepository {
     await client.from('product_media').insert({
       'product_id': productId,
       'storage_path': path,
+      'storage_bucket': 'artbook-agent-intake',
       'media_type': 'image',
       'alt_text': altText,
       'is_primary': isPrimary,
@@ -145,7 +146,7 @@ class ArtisanProductRepository {
     final safeFileName = fileName.replaceAll(RegExp(r'[^a-zA-Z0-9._-]'), '_');
     final path = '$_userId/intake/${DateTime.now().microsecondsSinceEpoch}_$safeFileName';
 
-    await client.storage.from('artbook-product-media').uploadBinary(
+    await client.storage.from('artbook-agent-intake').uploadBinary(
       path,
       bytes,
       fileOptions: FileOptions(contentType: contentType, upsert: false),
