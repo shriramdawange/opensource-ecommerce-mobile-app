@@ -51,6 +51,62 @@ class _ArtisanListingsPageState extends State<ArtisanListingsPage> {
     if (created == true && mounted) _load();
   }
 
+
+  Future<void> _requestPublication(Map<String, dynamic> product) async {
+    final productId = product['id']?.toString();
+    final title = product['title']?.toString() ?? 'this product';
+    if (productId == null || productId.isEmpty) return;
+
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: const Text('Publish this listing?'),
+        content: Text(
+          '“$title” will become visible to buyers on the ArtBook marketplace. '
+          'Please confirm that the product details, price, craft story and photos are accurate.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext, false),
+            child: const Text('Keep as draft'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(dialogContext, true),
+            child: const Text('Confirm publication'),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true || !mounted) return;
+
+    try {
+      final request = await _repository.requestListingPublication(
+        productId: productId,
+      );
+      final approvalId = request['approval_id']?.toString();
+      if (approvalId == null || approvalId.isEmpty) {
+        throw const AuthException('The publication approval was not created.');
+      }
+
+      await _repository.decideApproval(
+        approvalId: approvalId,
+        approve: true,
+      );
+      if (!mounted) return;
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Your product is now published on ArtBook.')),
+      );
+      await _load();
+    } catch (error) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Could not publish listing: $error')),
+        );
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
@@ -109,16 +165,31 @@ class _ArtisanListingsPageState extends State<ArtisanListingsPage> {
                           final media = product['product_media'] as List? ?? const [];
                           final status = product['status']?.toString() ?? 'draft';
                           return Card(
-                            child: ListTile(
-                              leading: const CircleAvatar(
-                                child: Icon(Icons.palette_outlined),
+                            child: Padding(
+                              padding: const EdgeInsets.all(8),
+                              child: Column(
+                                children: [
+                                  ListTile(
+                                    leading: const CircleAvatar(
+                                      child: Icon(Icons.palette_outlined),
+                                    ),
+                                    title: Text(product['title']?.toString() ?? 'Untitled'),
+                                    subtitle: Text(
+                                      '₹${product['price'] ?? '—'}  ·  ${status.toUpperCase()}  ·  ${media.length} photo(s)',
+                                    ),
+                                    isThreeLine: true,
+                                  ),
+                                  if (status == 'draft' || status == 'submitted')
+                                    Align(
+                                      alignment: Alignment.centerRight,
+                                      child: TextButton.icon(
+                                        onPressed: () => _requestPublication(product),
+                                        icon: const Icon(Icons.publish_outlined),
+                                        label: const Text('Review & publish'),
+                                      ),
+                                    ),
+                                ],
                               ),
-                              title: Text(product['title']?.toString() ?? 'Untitled'),
-                              subtitle: Text(
-                                '₹${product['price'] ?? '—'}  ·  ${status.toUpperCase()}  ·  ${media.length} photo(s)',
-                              ),
-                              isThreeLine: true,
-                              trailing: const Icon(Icons.chevron_right),
                             ),
                           );
                         },
