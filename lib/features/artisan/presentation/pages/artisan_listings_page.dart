@@ -54,6 +54,114 @@ class _ArtisanListingsPageState extends State<ArtisanListingsPage> {
   }
 
 
+
+  Future<void> _showPriceGuidance(Map<String, dynamic> product) async {
+    final productId = product['id']?.toString();
+    if (productId == null) return;
+
+    try {
+      final result = await ArtBookAgentRepository(
+        client: ArtBookSupabase.client,
+      ).getPriceGuidance(productId: productId);
+
+      if (!mounted) return;
+      final range = result['price_range'];
+      final hasRange = range is Map;
+      final body = hasRange
+          ? 'Indicative range: \${range['currency'] ?? 'INR'} \${range['min']} – \${range['max']} per \${range['unit'] ?? 'piece'}\\n\\nBased on \${result['comparable_count'] ?? 0} verified observations. Confidence: \${result['confidence'] ?? 'not available'}.'
+          : (result['message']?.toString() ??
+              'There is not enough verified comparable market data to suggest a price.');
+
+      await showDialog<void>(
+        context: context,
+        builder: (dialogContext) => AlertDialog(
+          title: const Text('Market price guidance'),
+          content: Text(
+            '$body\\n\\nThis is an indicative comparison, not a guaranteed price or appraisal. You choose the final selling price.',
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(dialogContext),
+              child: const Text('Close'),
+            ),
+          ],
+        ),
+      );
+    } catch (error) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Price guidance unavailable: $error')),
+      );
+    }
+  }
+
+  Future<void> _showBuyerMatches(Map<String, dynamic> product) async {
+    final productId = product['id']?.toString();
+    if (productId == null) return;
+
+    try {
+      final matches = await ArtBookAgentRepository(
+        client: ArtBookSupabase.client,
+      ).matchBuyers(productId: productId);
+
+      if (!mounted) return;
+      await showDialog<void>(
+        context: context,
+        builder: (dialogContext) => AlertDialog(
+          title: const Text('Matching buyer requirements'),
+          content: SizedBox(
+            width: 420,
+            child: matches.isEmpty
+                ? const Text(
+                    'No matching public buyer requirements were found yet. Ask buyers to post their requirements in ArtBook.',
+                  )
+                : ListView.separated(
+                    shrinkWrap: true,
+                    itemCount: matches.length > 6 ? 6 : matches.length,
+                    separatorBuilder: (_, __) => const Divider(),
+                    itemBuilder: (context, index) {
+                      final match = matches[index];
+                      final score = (match['match_score'] as num?)?.toDouble() ?? 0;
+                      return Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            match['title']?.toString() ?? 'Buyer requirement',
+                            style: const TextStyle(fontWeight: FontWeight.w800),
+                          ),
+                          const SizedBox(height: 3),
+                          Text(
+                            '\${score.toStringAsFixed(0)}% match · Qty \${match['quantity'] ?? 1}',
+                            style: const TextStyle(color: Color(0xFF8B735F), fontSize: 12),
+                          ),
+                          if ((match['description'] ?? '').toString().isNotEmpty)
+                            Text(match['description'].toString()),
+                          if (match['match_reasons'] is List)
+                            Text(
+                              (match['match_reasons'] as List).join(' · '),
+                              style: const TextStyle(fontSize: 11, color: Color(0xFF8B735F)),
+                            ),
+                        ],
+                      );
+                    },
+                  ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(dialogContext),
+              child: const Text('Close'),
+            ),
+          ],
+        ),
+      );
+    } catch (error) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Buyer matching unavailable: $error')),
+      );
+    }
+  }
+
   Future<void> _requestPublication(Map<String, dynamic> product) async {
     final productId = product['id']?.toString();
     final title = product['title']?.toString() ?? 'this product';
@@ -188,6 +296,28 @@ class _ArtisanListingsPageState extends State<ArtisanListingsPage> {
                                         onPressed: () => _requestPublication(product),
                                         icon: const Icon(Icons.publish_outlined),
                                         label: const Text('Review & publish'),
+                                      ),
+                                    ),
+                                  if (status == 'published')
+                                    Padding(
+                                      padding: const EdgeInsets.symmetric(horizontal: 8),
+                                      child: Row(
+                                        children: [
+                                          Expanded(
+                                            child: TextButton.icon(
+                                              onPressed: () => _showPriceGuidance(product),
+                                              icon: const Icon(Icons.insights_outlined, size: 18),
+                                              label: const Text('Price insights'),
+                                            ),
+                                          ),
+                                          Expanded(
+                                            child: TextButton.icon(
+                                              onPressed: () => _showBuyerMatches(product),
+                                              icon: const Icon(Icons.people_alt_outlined, size: 18),
+                                              label: const Text('Find buyers'),
+                                            ),
+                                          ),
+                                        ],
                                       ),
                                     ),
                                 ],
