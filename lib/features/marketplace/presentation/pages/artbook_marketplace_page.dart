@@ -6,7 +6,9 @@ import '../../../artisan/data/repositories/artisan_product_repository.dart';
 import 'artbook_product_detail_page.dart';
 
 class ArtBookMarketplacePage extends StatefulWidget {
-  const ArtBookMarketplacePage({super.key});
+  final String? initialCategoryId;
+
+  const ArtBookMarketplacePage({super.key, this.initialCategoryId});
 
   @override
   State<ArtBookMarketplacePage> createState() => _ArtBookMarketplacePageState();
@@ -25,6 +27,7 @@ class _ArtBookMarketplacePageState extends State<ArtBookMarketplacePage> {
   void initState() {
     super.initState();
     _repository = ArtisanProductRepository(client: ArtBookSupabase.client);
+    _selectedCategory = widget.initialCategoryId;
     _load();
   }
 
