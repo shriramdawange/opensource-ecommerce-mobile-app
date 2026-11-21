@@ -228,7 +228,7 @@ class _ArtBookCartPageState extends State<ArtBookCartPage> {
                         final media = product['product_media'];
                         final imageUrl = media is List && media.isNotEmpty && media.first is Map
                             ? ArtBookSupabase.client.storage
-                                .from('artbook-product-media')
+                                .from(media.first['storage_bucket']?.toString() ?? 'artbook-product-media')
                                 .getPublicUrl(media.first['storage_path'].toString())
                             : null;
 
