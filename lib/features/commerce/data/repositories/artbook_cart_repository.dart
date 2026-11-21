@@ -72,12 +72,19 @@ class ArtBookCartRepository {
   Future<Map<String, dynamic>> requestOrder({
     required Map<String, dynamic> shippingAddress,
     required String idempotencyKey,
+    required bool buyerConfirmed,
   }) async {
+    if (!buyerConfirmed) {
+      throw const AuthException(
+        'Confirm the order and shipping-address sharing before continuing.',
+      );
+    }
     final cartId = await _getOrCreateCartId();
     final response = await client.functions.invoke('place-order', body: {
       'cart_id': cartId,
       'shipping_address': shippingAddress,
       'idempotency_key': idempotencyKey,
+      'buyer_confirmed': true,
     });
     if (response.status < 200 || response.status >= 300) {
       throw AuthException('Order request failed (\${response.status}).');
