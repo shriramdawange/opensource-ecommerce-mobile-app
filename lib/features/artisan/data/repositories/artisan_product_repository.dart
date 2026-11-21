@@ -79,6 +79,7 @@ class ArtisanProductRepository {
     required double price,
     required int availableQuantity,
     required int minimumOrderQuantity,
+    double? floorPrice,
   }) async {
     final artisanId = await _artisanProfileId();
     final slugBase = title
@@ -87,7 +88,7 @@ class ArtisanProductRepository {
         .replaceAll(RegExp(r'^-+|-+$'), '');
     final slug = '${slugBase.isEmpty ? 'handmade-product' : slugBase}-${DateTime.now().microsecondsSinceEpoch}';
 
-    return await client.from('products').insert({
+    final product = await client.from('products').insert({
       'artisan_profile_id': artisanId,
       'category_id': categoryId.isEmpty ? null : categoryId,
       'title': title.trim(),
@@ -101,6 +102,16 @@ class ArtisanProductRepository {
       'min_order_quantity': minimumOrderQuantity,
       'is_handmade': true,
     }).select().single();
+
+    if (floorPrice != null) {
+      await client.from('product_private_terms').insert({
+        'product_id': product['id'],
+        'artisan_user_id': _userId,
+        'floor_price': floorPrice,
+      });
+    }
+
+    return product;
   }
 
   Future<String> uploadProductImage({
