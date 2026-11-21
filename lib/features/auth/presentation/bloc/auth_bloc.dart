@@ -162,12 +162,28 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     AuthCheckStatus event,
     Emitter<AuthState> emit,
   ) async {
-    final token = await AuthStorage.getToken();
-    if (token != null && token.isNotEmpty) {
-      final name = await AuthStorage.getUserName();
-      final email = await AuthStorage.getUserEmail();
-      final userId = await AuthStorage.getUserId();
+    final session = repository.currentSession;
+    final user = repository.currentUser;
+    final token = session?.accessToken;
+
+    if (session != null && user != null && token != null && token.isNotEmpty) {
+      final metadataName = user.userMetadata?['full_name']?.toString();
+      final name = (metadataName == null || metadataName.trim().isEmpty)
+          ? (user.email ?? 'ArtBook User')
+          : metadataName;
+      final email = user.email ?? '';
+      final userId = user.id;
       final deviceToken = await DeviceTokenService.getDeviceToken();
+
+      // Keep a compatibility copy for remaining legacy screens while their
+      // data repositories are migrated to ArtBook's Supabase API.
+      await AuthStorage.saveToken(token);
+      await AuthStorage.saveUserInfo(
+        name: name,
+        email: email,
+        userId: userId,
+      );
+
       emit(AuthAuthenticated(
         token: token,
         userName: name,
@@ -176,6 +192,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
         deviceToken: deviceToken,
       ));
     } else {
+      await AuthStorage.clearAuth();
       emit(const AuthUnauthenticated());
     }
   }
