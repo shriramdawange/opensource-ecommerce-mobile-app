@@ -14,7 +14,7 @@ The public publishable key is loaded by `lib/core/supabase/artbook_supabase.dart
 
 Recommended MVP model: **`meta/muse-ember`**. It accepts text and images, supports structured outputs, and is designed for agent-style workloads. OpenRouter currently lists it at **$0.10 per 1M input tokens** and **$0.50 per 1M output tokens**. Prices can change; check the live model page before scaling.
 
-Create an OpenRouter API key at [OpenRouter Keys](https://openrouter.ai/settings/keys). Give it a low initial spending limit and restrict it to the `meta/muse-ember` model if the key settings offer that control.
+Create a dedicated OpenRouter API key for ArtBook at [OpenRouter Keys](https://openrouter.ai/settings/keys). If per-key budget controls are available on your plan, start with a small cap (for example, **$5/month**) and limit the key to `meta/muse-ember` where model allowlisting is available. If your plan does not expose per-key budgets, keep a small prepaid credit balance and monitor usage in OpenRouter Activity.
 
 Then open [ArtBook Edge Function Secrets](https://supabase.com/dashboard/project/csyazvpfgbulczbrfnpu/functions/secrets) and set these three values:
 
