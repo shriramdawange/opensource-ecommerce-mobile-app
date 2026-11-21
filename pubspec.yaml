@@ -68,6 +68,9 @@ dependencies:
   device_info_plus: ^11.1.0
   dio: ^5.4.1
 
+  # ArtBook backend (Supabase Auth, Postgres, Storage, Edge Functions)
+  supabase_flutter: ^2.18.3
+
   # Image Handling & Camera
   image_picker: ^1.0.7
   image: ^4.1.7
