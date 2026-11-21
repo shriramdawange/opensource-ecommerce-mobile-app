@@ -10,6 +10,7 @@ import 'l10n/app_localizations.dart';
 import 'core/locale/locale_resolution.dart';
 import 'core/channel/channel_bootstrap_service.dart';
 import 'core/graphql/graphql_client.dart';
+import 'core/supabase/artbook_supabase.dart';
 import 'core/currency/currency_cubit.dart';
 import 'core/currency/currency_formatter.dart';
 import 'core/locale/locale_cubit.dart';
@@ -40,6 +41,9 @@ import 'features/splash/presentation/splash_screen.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  // ArtBook backend: Auth, Postgres and Storage.
+  await ArtBookSupabase.initialize();
 
   // Initialize Firebase
   try {
@@ -473,7 +477,7 @@ class BagistoApp extends StatelessWidget {
             create: (_) => CartRepository(client: clientNotifier.value),
           ),
           RepositoryProvider<AuthRepository>(
-            create: (_) => AuthRepository(client: clientNotifier.value),
+            create: (_) => AuthRepository(client: ArtBookSupabase.client),
           ),
           RepositoryProvider<HomeRepository>(
             create: (_) => HomeRepository(client: clientNotifier.value),
