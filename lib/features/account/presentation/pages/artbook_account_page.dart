@@ -8,6 +8,7 @@ import '../../../auth/presentation/bloc/auth_bloc.dart';
 import '../../../auth/presentation/pages/login_page.dart';
 import '../../../auth/presentation/pages/sign_up_page.dart';
 import '../../../commerce/presentation/pages/artbook_orders_page.dart';
+import '../../../marketplace/presentation/pages/artbook_buyer_request_page.dart';
 
 class ArtBookAccountPage extends StatelessWidget {
   const ArtBookAccountPage({super.key});
@@ -137,6 +138,16 @@ class ArtBookAccountPage extends StatelessWidget {
                 subtitle: 'Create drafts, upload photos and request publication',
                 onTap: () => Navigator.of(context).push(
                   MaterialPageRoute(builder: (_) => const ArtisanListingsPage()),
+                ),
+              ),
+              const SizedBox(height: 10),
+              _menuTile(
+                context,
+                icon: Icons.campaign_outlined,
+                title: 'Post a buyer requirement',
+                subtitle: 'Tell artisans what you need for individual or bulk orders',
+                onTap: () => Navigator.of(context).push(
+                  MaterialPageRoute(builder: (_) => const ArtBookBuyerRequestPage()),
                 ),
               ),
               const SizedBox(height: 10),
