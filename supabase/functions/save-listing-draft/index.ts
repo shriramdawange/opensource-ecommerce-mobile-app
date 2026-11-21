@@ -165,6 +165,7 @@ Deno.serve(async (req: Request) => {
       const mediaRows = mediaPaths.map((path: string, index: number) => ({
         product_id: product.id,
         storage_path: path,
+        storage_bucket: "artbook-agent-intake",
         media_type: "image",
         is_primary: index === 0,
         sort_order: index,
