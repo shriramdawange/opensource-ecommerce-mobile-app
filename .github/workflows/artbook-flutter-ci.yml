@@ -12,6 +12,11 @@ on:
 permissions:
   contents: read
 
+# Keep only the newest validation for each branch while commits arrive quickly.
+concurrency:
+  group: artbook-flutter-ci-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   flutter:
     name: Analyze and test ArtBook
