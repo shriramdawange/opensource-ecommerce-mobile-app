@@ -71,8 +71,9 @@ class _ArtBookMarketplacePageState extends State<ArtBookMarketplacePage> {
     });
     final first = ordered.first;
     if (first is! Map || first['storage_path'] == null) return null;
+    final bucket = first['storage_bucket']?.toString() ?? 'artbook-product-media';
     return ArtBookSupabase.client.storage
-        .from('artbook-product-media')
+        .from(bucket)
         .getPublicUrl(first['storage_path'].toString());
   }
 
