@@ -12,6 +12,10 @@ import 'package:http/http.dart' as http;
 import 'package:http/testing.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+// Explicit legacy Bagisto URL for URL-resolution tests only.
+const String _testBagistoPublicBaseUrl =
+    'http://192.168.15.239/Bagisto-Api/new-setup/public';
+
 /// Client whose response comes from [respond]; records every request body.
 GraphQLClient _client(
   Map<String, dynamic> Function() respond, {
@@ -220,11 +224,11 @@ void main() {
     expect(columns, hasLength(2));
     expect(links.map((link) => link.title), ['About Us', 'Privacy Policy']);
     expect(
-      links.first.resolveUrl(bagistoPublicBaseUrl),
+      links.first.resolveUrl(_testBagistoPublicBaseUrl),
       'http://192.168.15.239/Bagisto-Api/new-setup/public/page/about-us',
     );
     expect(
-      links.last.resolveUrl(bagistoPublicBaseUrl),
+      links.last.resolveUrl(_testBagistoPublicBaseUrl),
       'http://192.168.15.239/Bagisto-Api/new-setup/public/page/privacy-policy',
     );
   });
@@ -282,7 +286,7 @@ void main() {
     );
 
     expect(
-      banner.fullImageUrl(bagistoPublicBaseUrl),
+      banner.fullImageUrl(_testBagistoPublicBaseUrl),
       'http://192.168.15.239/Bagisto-Api/new-setup/public/storage/themes/default/sections/1/banner.webp',
     );
   });
