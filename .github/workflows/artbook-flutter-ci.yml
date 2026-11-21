@@ -72,11 +72,11 @@ jobs:
         shell: bash
         run: |
           set +e
-          flutter analyze --no-pub --format=machine lib > analyze.txt 2>&1
+          flutter analyze --no-pub lib > analyze.txt 2>&1
           analyze_status=$?
           set -e
           cat analyze.txt
-          if grep -E '^(ERROR|WARNING)\\|' analyze.txt; then
+          if grep -E '^[[:space:]]*(error|warning)[[:space:]]+•' analyze.txt; then
             echo "Application code has analyzer errors or warnings."
             exit 1
           fi
