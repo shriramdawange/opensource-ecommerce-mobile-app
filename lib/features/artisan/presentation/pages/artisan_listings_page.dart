@@ -6,6 +6,8 @@ import 'package:image_picker/image_picker.dart';
 import '../../../../core/supabase/artbook_supabase.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../data/repositories/artisan_product_repository.dart';
+import '../../../agent/data/repositories/artbook_agent_repository.dart';
+import 'package:speech_to_text/speech_to_text.dart' as stt;
 
 class ArtisanListingsPage extends StatefulWidget {
   const ArtisanListingsPage({super.key});
@@ -217,7 +219,16 @@ class _CreateArtisanProductPageState extends State<CreateArtisanProductPage> {
   final _price = TextEditingController();
   final _quantity = TextEditingController(text: '1');
   final _minimumOrder = TextEditingController(text: '1');
+  final _floorPrice = TextEditingController();
+  final _voiceDescription = TextEditingController();
   final _picker = ImagePicker();
+  final stt.SpeechToText _speech = stt.SpeechToText();
+
+  String _language = 'mr-IN';
+  bool _listening = false;
+  bool _aiWorking = false;
+  String? _agentCaseId;
+  List<String> _agentMediaPaths = [];
 
   List<Map<String, dynamic>> _categories = [];
   String? _categoryId;
@@ -243,6 +254,9 @@ class _CreateArtisanProductPageState extends State<CreateArtisanProductPage> {
     _price.dispose();
     _quantity.dispose();
     _minimumOrder.dispose();
+    _floorPrice.dispose();
+    _voiceDescription.dispose();
+    _speech.stop();
     super.dispose();
   }
 
@@ -273,6 +287,134 @@ class _CreateArtisanProductPageState extends State<CreateArtisanProductPage> {
     }
   }
 
+
+  String _contentType(String fileName) {
+    final extension = fileName.split('.').last.toLowerCase();
+    return switch (extension) {
+      'png' => 'image/png',
+      'webp' => 'image/webp',
+      'avif' => 'image/avif',
+      _ => 'image/jpeg',
+    };
+  }
+
+  Future<void> _toggleVoiceInput() async {
+    if (_listening) {
+      await _speech.stop();
+      if (mounted) setState(() => _listening = false);
+      return;
+    }
+
+    try {
+      final available = await _speech.initialize(
+        onStatus: (status) {
+          if (!mounted) return;
+          setState(() => _listening = status == 'listening');
+        },
+        onError: (error) {
+          if (!mounted) return;
+          setState(() {
+            _listening = false;
+            _error = error.errorMsg;
+          });
+        },
+      );
+
+      if (!available) {
+        setState(() => _error = 'Speech recognition is not available on this device.');
+        return;
+      }
+
+      await _speech.listen(
+        localeId: _language.replaceAll('-', '_'),
+        onResult: (result) {
+          if (!mounted) return;
+          setState(() {
+            _voiceDescription.text = result.recognizedWords;
+            _voiceDescription.selection = TextSelection.fromPosition(
+              TextPosition(offset: _voiceDescription.text.length),
+            );
+          });
+        },
+      );
+      if (mounted) setState(() => _listening = true);
+    } catch (error) {
+      if (mounted) setState(() => _error = 'Voice input failed: $error');
+    }
+  }
+
+  Future<void> _generateWithArtBookAI() async {
+    if (_voiceDescription.text.trim().isEmpty && _imageBytes == null) {
+      setState(() {
+        _error = 'Describe your craft or attach a product photo before asking ArtBook AI.';
+      });
+      return;
+    }
+
+    setState(() {
+      _aiWorking = true;
+      _error = null;
+    });
+
+    try {
+      final mediaPaths = <String>[];
+      if (_image != null && _imageBytes != null) {
+        final path = await widget.repository.uploadAgentImage(
+          bytes: _imageBytes!,
+          fileName: _image!.name,
+          contentType: _contentType(_image!.name),
+        );
+        mediaPaths.add(path);
+      }
+
+      final response = await ArtBookAgentRepository(
+        client: ArtBookSupabase.client,
+      ).startListing(
+        language: _language,
+        voiceTranscript: _voiceDescription.text.trim(),
+        mediaPaths: mediaPaths,
+        artisanNotes: 'The artisan will review and edit every suggested field before saving.',
+        idempotencyKey: 'listing-${DateTime.now().microsecondsSinceEpoch}',
+      );
+
+      final draft = response['draft'];
+      if (draft is! Map) {
+        throw StateError(
+          'ArtBook AI did not return a reviewed listing draft. Please try again.',
+        );
+      }
+
+      final values = Map<String, dynamic>.from(draft);
+      if (!mounted) return;
+
+      setState(() {
+        _agentCaseId = response['case_id']?.toString();
+        _agentMediaPaths = mediaPaths;
+        _title.text = values['title']?.toString() ?? '';
+        _description.text = values['description']?.toString() ??
+            values['short_description']?.toString() ?? '';
+        _story.text = values['craft_story']?.toString() ?? '';
+        _origin.text = values['craft_origin_suggestion']?.toString() ?? '';
+      });
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('AI draft created. Review every detail before saving.'),
+        ),
+      );
+    } catch (error) {
+      if (!mounted) return;
+      final message = error.toString();
+      setState(() {
+        _error = message.contains('ARTBOOK_AI_PROVIDER_NOT_CONFIGURED')
+            ? 'ArtBook AI needs an AI provider configured in Supabase Edge Function secrets. You can still create this listing manually.'
+            : 'Could not generate the AI draft: $message';
+      });
+    } finally {
+      if (mounted) setState(() => _aiWorking = false);
+    }
+  }
+
   Future<void> _save() async {
     if (!_formKey.currentState!.validate()) return;
     setState(() {
@@ -281,35 +423,53 @@ class _CreateArtisanProductPageState extends State<CreateArtisanProductPage> {
     });
 
     try {
-      if (_createdDraftId == null) {
-        final draft = await widget.repository.createDraft(
+      final floorText = _floorPrice.text.trim();
+      final floorPrice = floorText.isEmpty ? null : double.tryParse(floorText);
+      if (floorText.isNotEmpty && (floorPrice == null || floorPrice < 0)) {
+        throw StateError('Enter a valid minimum acceptable price.');
+      }
+
+      if (_agentCaseId != null) {
+        final result = await ArtBookAgentRepository(
+          client: ArtBookSupabase.client,
+        ).saveListingDraft(
+          caseId: _agentCaseId!,
           title: _title.text,
           description: _description.text,
           craftStory: _story.text,
           craftOrigin: _origin.text,
           categoryId: _categoryId ?? '',
           price: double.parse(_price.text.trim()),
+          floorPrice: floorPrice,
           availableQuantity: int.parse(_quantity.text.trim()),
           minimumOrderQuantity: int.parse(_minimumOrder.text.trim()),
+          mediaPaths: _agentMediaPaths,
         );
-        _createdDraftId = draft['id'].toString();
-      }
+        _createdDraftId = (result['product'] as Map?)?['id']?.toString();
+      } else {
+        if (_createdDraftId == null) {
+          final draft = await widget.repository.createDraft(
+            title: _title.text,
+            description: _description.text,
+            craftStory: _story.text,
+            craftOrigin: _origin.text,
+            categoryId: _categoryId ?? '',
+            price: double.parse(_price.text.trim()),
+            availableQuantity: int.parse(_quantity.text.trim()),
+            minimumOrderQuantity: int.parse(_minimumOrder.text.trim()),
+          );
+          _createdDraftId = draft['id'].toString();
+        }
 
-      if (_image != null && _imageBytes != null) {
-        final extension = _image!.name.split('.').last.toLowerCase();
-        final contentType = switch (extension) {
-          'png' => 'image/png',
-          'webp' => 'image/webp',
-          'avif' => 'image/avif',
-          _ => 'image/jpeg',
-        };
-        await widget.repository.uploadProductImage(
-          productId: _createdDraftId!,
-          bytes: _imageBytes!,
-          fileName: _image!.name,
-          contentType: contentType,
-          altText: _title.text,
-        );
+        if (_image != null && _imageBytes != null) {
+          await widget.repository.uploadProductImage(
+            productId: _createdDraftId!,
+            bytes: _imageBytes!,
+            fileName: _image!.name,
+            contentType: _contentType(_image!.name),
+            altText: _title.text,
+          );
+        }
       }
 
       if (!mounted) return;
@@ -343,6 +503,90 @@ class _CreateArtisanProductPageState extends State<CreateArtisanProductPage> {
               child: ListView(
                 padding: const EdgeInsets.all(20),
                 children: [
+                  Container(
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      color: isDark ? AppColors.neutral800 : const Color(0xFFF2E8DC),
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text(
+                          'Describe your craft. ArtBook helps with the listing.',
+                          style: TextStyle(fontWeight: FontWeight.w800, fontSize: 16),
+                        ),
+                        const SizedBox(height: 8),
+                        DropdownButtonFormField<String>(
+                          value: _language,
+                          decoration: const InputDecoration(
+                            labelText: 'Voice / listing language',
+                            isDense: true,
+                          ),
+                          items: const [
+                            DropdownMenuItem(value: 'mr-IN', child: Text('Marathi')),
+                            DropdownMenuItem(value: 'hi-IN', child: Text('Hindi')),
+                            DropdownMenuItem(value: 'en-IN', child: Text('English')),
+                          ],
+                          onChanged: (value) {
+                            if (value != null) setState(() => _language = value);
+                          },
+                        ),
+                        const SizedBox(height: 10),
+                        TextField(
+                          controller: _voiceDescription,
+                          minLines: 2,
+                          maxLines: 4,
+                          decoration: const InputDecoration(
+                            labelText: 'Describe the product and how it is made',
+                            hintText: 'You can type or use the microphone.',
+                            border: OutlineInputBorder(),
+                            filled: true,
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        Row(
+                          children: [
+                            Expanded(
+                              child: OutlinedButton.icon(
+                                onPressed: _toggleVoiceInput,
+                                icon: Icon(_listening ? Icons.stop : Icons.mic_none),
+                                label: Text(_listening ? 'Stop recording' : 'Speak'),
+                              ),
+                            ),
+                            const SizedBox(width: 8),
+                            Expanded(
+                              child: FilledButton.icon(
+                                onPressed: _aiWorking ? null : _generateWithArtBookAI,
+                                icon: _aiWorking
+                                    ? const SizedBox(
+                                        width: 16,
+                                        height: 16,
+                                        child: CircularProgressIndicator(strokeWidth: 2),
+                                      )
+                                    : const Icon(Icons.auto_awesome),
+                                label: Text(_aiWorking ? 'Preparing…' : 'Create with AI'),
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 6),
+                        const Text(
+                          'AI suggestions are not facts. Check the craft name, materials, origin and story before saving.',
+                          style: TextStyle(fontSize: 11, color: Color(0xFF8B735F)),
+                        ),
+                        if (_agentCaseId != null)
+                          const Padding(
+                            padding: EdgeInsets.only(top: 6),
+                            child: Text(
+                              'AI draft ready for your review.',
+                              style: TextStyle(color: Color(0xFF2E7D32), fontWeight: FontWeight.w700),
+                            ),
+                          ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 18),
                   TextFormField(
                     controller: _title,
                     decoration: const InputDecoration(labelText: 'Product name'),
@@ -388,6 +632,26 @@ class _CreateArtisanProductPageState extends State<CreateArtisanProductPage> {
                     validator: (value) {
                       final amount = double.tryParse(value?.trim() ?? '');
                       return amount == null || amount < 0 ? 'Enter a valid price.' : null;
+                    },
+                  ),
+                  const SizedBox(height: 12),
+                  TextFormField(
+                    controller: _floorPrice,
+                    keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                    decoration: const InputDecoration(
+                      labelText: 'Your minimum acceptable price (optional)',
+                      helperText: 'Private to you. The buyer and public listing cannot see this value.',
+                    ),
+                    validator: (value) {
+                      final text = value?.trim() ?? '';
+                      if (text.isEmpty) return null;
+                      final amount = double.tryParse(text);
+                      final askingPrice = double.tryParse(_price.text.trim());
+                      if (amount == null || amount < 0) return 'Enter a valid price.';
+                      if (askingPrice != null && amount > askingPrice) {
+                        return 'Your minimum price cannot exceed the listing price.';
+                      }
+                      return null;
                     },
                   ),
                   const SizedBox(height: 12),
