@@ -5,9 +5,16 @@ plugins {
     id("dev.flutter.flutter-gradle-plugin")
 }
 
-android {
+// Read Flutter's SDK values after applying the Flutter Gradle plugin.
+val flutterCompileSdk = flutter.compileSdkVersion
+val flutterMinSdk = flutter.minSdkVersion
+val flutterTargetSdk = flutter.targetSdkVersion
+
+// Use the public AGP API. The legacy Project.android(BaseAppModuleExtension)
+// accessor is deprecated on AGP 9.
+extensions.configure<com.android.build.api.dsl.ApplicationExtension> {
     namespace = "com.bagisto.bagisto_flutter"
-    compileSdk = flutter.compileSdkVersion
+    compileSdk = flutterCompileSdk
     ndkVersion = "28.2.13676358"
 
     compileOptions {
@@ -16,31 +23,30 @@ android {
         targetCompatibility = JavaVersion.VERSION_17
     }
 
-    kotlinOptions {
-        jvmTarget = JavaVersion.VERSION_17.toString()
-    }
-
     defaultConfig {
-        // TODO: Specify your own unique Application ID (https://developer.android.com/studio/build/application-id.html).
         applicationId = "com.webkul.bagisto.mobikul"
-        // You can update the following values to match your application needs.
-        // For more information, see: https://flutter.dev/to/review-gradle-config.
-        minSdk = flutter.minSdkVersion
-        targetSdk = flutter.targetSdkVersion
+        minSdk = flutterMinSdk
+        targetSdk = flutterTargetSdk
         versionCode = 246
         versionName = "2.4.6"
     }
 
     buildTypes {
-        release {
-            // TODO: Add your own signing config for the release build.
-            // Signing with the debug keys for now, so `flutter run --release` works.
+        getByName("release") {
+            // Debug signing is retained only for the installable CI test APK.
             signingConfig = signingConfigs.getByName("debug")
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro",
             )
         }
+    }
+}
+
+// kotlinOptions is deprecated in Kotlin Gradle Plugin 2.4; use compilerOptions.
+kotlin {
+    compilerOptions {
+        jvmTarget = org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_17
     }
 }
 
