@@ -4,6 +4,7 @@ import '../../../../core/theme/app_theme.dart';
 import '../../../../core/navigation/app_navigator.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../../marketplace/presentation/pages/artbook_marketplace_page.dart';
+import '../../../marketplace/presentation/pages/artbook_categories_page.dart';
 import '../../../commerce/presentation/pages/artbook_cart_page.dart';
 import '../../../account/presentation/pages/artbook_account_page.dart';
 
@@ -62,7 +63,7 @@ class MainShellState extends State<MainShell> {
             index: _currentIndex,
             children: const [
               ArtBookMarketplacePage(),
-              ArtBookMarketplacePage(),
+              ArtBookCategoriesPage(),
               ArtBookCartPage(),
               ArtBookAccountPage(),
             ],
