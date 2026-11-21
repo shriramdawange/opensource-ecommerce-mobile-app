@@ -147,7 +147,10 @@ class ArtisanProductRepository {
       'is_primary': isPrimary,
     });
 
-    return client.storage.from('artbook-product-media').getPublicUrl(path);
+    final signed = await client.storage
+        .from('artbook-agent-intake')
+        .createSignedUrl(path, 60);
+    return signed;
   }
   Future<String> uploadAgentImage({
     required Uint8List bytes,
