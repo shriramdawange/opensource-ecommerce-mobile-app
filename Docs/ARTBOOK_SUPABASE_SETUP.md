@@ -10,15 +10,31 @@
 
 The public publishable key is loaded by `lib/core/supabase/artbook_supabase.dart`. Keep secret/service-role keys on the Supabase server only.
 
-## Required Edge Function secrets
+## OpenRouter configuration for ArtBook Agentic AI
 
-AI listing generation requires an OpenAI-compatible provider. Set these secrets from Supabase Dashboard → Edge Functions → Secrets:
+Recommended MVP model: **`meta/muse-ember`**. It accepts text and images, supports structured outputs, and is designed for agent-style workloads. OpenRouter currently lists it at **$0.10 per 1M input tokens** and **$0.50 per 1M output tokens**. Prices can change; check the live model page before scaling.
 
-- `ARTBOOK_LLM_BASE_URL` — OpenAI-compatible chat completions endpoint
-- `ARTBOOK_LLM_API_KEY` — private API key
-- `ARTBOOK_LLM_MODEL` — model name accepted by that endpoint
+Create an OpenRouter API key at [OpenRouter Keys](https://openrouter.ai/settings/keys). Give it a low initial spending limit and restrict it to the `meta/muse-ember` model if the key settings offer that control.
 
-Do not commit these values or put them in Flutter `--dart-define` arguments.
+Then open [ArtBook Edge Function Secrets](https://supabase.com/dashboard/project/csyazvpfgbulczbrfnpu/functions/secrets) and set these three values:
+
+| Secret name | Value |
+|---|---|
+| `ARTBOOK_LLM_BASE_URL` | `https://openrouter.ai/api/v1` |
+| `ARTBOOK_LLM_API_KEY` | Your OpenRouter key (starts with `sk-or-v1-`) |
+| `ARTBOOK_LLM_MODEL` | `meta/muse-ember` |
+
+The `artbook-agent` function appends `/chat/completions` to the base URL (or accepts a full endpoint URL), sends the key as a Bearer token, and caps the generated response at 1,200 tokens. It labels requests as ArtBook using the optional OpenRouter `HTTP-Referer` and `X-Title` headers.
+
+**Security rules:**
+- Enter the API key only in Supabase Edge Function Secrets. Do not paste it into ChatGPT, Flutter, GitHub, screenshots, or a committed `.env` file.
+- Do not use a Supabase secret/service-role key as the OpenRouter key.
+- Do not expose `ARTBOOK_LLM_API_KEY` to the mobile app. Only the Edge Function reads it.
+- Keep a strict OpenRouter spend cap during testing. Check usage after a few listing generations.
+
+Secrets are available to Edge Functions immediately after saving; no separate function redeploy is normally required for secret changes.
+
+For local development only, use `supabase/functions/.env` (never commit it). A safe placeholder template is in `supabase/functions/.env.example`.
 
 The Supabase Edge Functions use Supabase-provided project URL and server keys. Every function is configured with JWT verification enabled.
 
