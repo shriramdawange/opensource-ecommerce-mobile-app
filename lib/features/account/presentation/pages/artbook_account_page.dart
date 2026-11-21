@@ -7,6 +7,7 @@ import '../../../artisan/presentation/pages/artisan_onboarding_page.dart';
 import '../../../auth/presentation/bloc/auth_bloc.dart';
 import '../../../auth/presentation/pages/login_page.dart';
 import '../../../auth/presentation/pages/sign_up_page.dart';
+import '../../../commerce/presentation/pages/artbook_orders_page.dart';
 
 class ArtBookAccountPage extends StatelessWidget {
   const ArtBookAccountPage({super.key});
@@ -143,9 +144,9 @@ class ArtBookAccountPage extends StatelessWidget {
                 context,
                 icon: Icons.receipt_long_outlined,
                 title: 'My orders',
-                subtitle: 'Order history and artisan order requests are coming next',
-                onTap: () => ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Order history is being connected to ArtBook.')),
+                subtitle: 'Track purchases and review buyer order requests',
+                onTap: () => Navigator.of(context).push(
+                  MaterialPageRoute(builder: (_) => const ArtBookOrdersPage()),
                 ),
               ),
               const SizedBox(height: 24),
