@@ -425,7 +425,7 @@ Deno.serve(async (req: Request) => {
         case_id: caseId,
         resumable: true,
         message: message === "ARTBOOK_AI_PROVIDER_NOT_CONFIGURED"
-          ? "Set ARTBOOK_LLM_BASE_URL, ARTBOOK_LLM_API_KEY and ARTBOOK_LLM_MODEL in Edge Function secrets."
+          ? "Set ARTBOOK_LLM_API_KEY in Supabase Edge Function secrets. The OpenRouter base URL and free Gemma model are already configured by default."
           : "The AI step failed. The case was saved and can be retried.",
       }, status);
     }
