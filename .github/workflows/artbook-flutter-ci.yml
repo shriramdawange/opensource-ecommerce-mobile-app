@@ -1,0 +1,71 @@
+name: ArtBook Flutter CI
+
+on:
+  push:
+    branches:
+      - agent
+  pull_request:
+    branches:
+      - main
+      - agent
+
+permissions:
+  contents: read
+
+jobs:
+  flutter:
+    name: Analyze and test ArtBook
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: "3.38.9"
+          channel: stable
+          cache: true
+
+      - name: Flutter version
+        run: flutter --version
+
+      - name: Resolve packages
+        run: flutter pub get
+
+      - name: Generate localizations
+        run: flutter gen-l10n
+
+      - name: Format changed ArtBook code
+        run: |
+          dart format \
+            lib/main.dart \
+            lib/core/supabase \
+            lib/features/agent \
+            lib/features/artisan \
+            lib/features/marketplace \
+            lib/features/commerce/data/repositories/artbook_cart_repository.dart \
+            lib/features/commerce/data/repositories/artbook_orders_repository.dart \
+            lib/features/commerce/presentation/pages/artbook_cart_page.dart \
+            lib/features/commerce/presentation/pages/artbook_orders_page.dart \
+            lib/features/account/presentation/pages/artbook_account_page.dart \
+            lib/features/splash/presentation/splash_screen.dart
+
+      - name: Analyze
+        shell: bash
+        run: |
+          set +e
+          flutter analyze --no-pub --format=machine > analyze.txt 2>&1
+          analyze_status=$?
+          set -e
+          cat analyze.txt
+          if grep -E '^(ERROR|WARNING)\|' analyze.txt; then
+            echo "Flutter analyzer reported errors or warnings."
+            exit 1
+          fi
+          echo "Analyzer completed (exit code: $analyze_status); informational lints do not fail this job."
+
+      - name: Run tests
+        run: flutter test --no-pub --reporter expanded
