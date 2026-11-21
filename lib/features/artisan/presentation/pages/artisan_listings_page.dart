@@ -224,6 +224,7 @@ class _CreateArtisanProductPageState extends State<CreateArtisanProductPage> {
   final _picker = ImagePicker();
   final stt.SpeechToText _speech = stt.SpeechToText();
 
+  late final String _agentIdempotencyKey = 'listing-${DateTime.now().microsecondsSinceEpoch}';
   String _language = 'mr-IN';
   bool _listening = false;
   bool _aiWorking = false;
@@ -374,7 +375,7 @@ class _CreateArtisanProductPageState extends State<CreateArtisanProductPage> {
         voiceTranscript: _voiceDescription.text.trim(),
         mediaPaths: mediaPaths,
         artisanNotes: 'The artisan will review and edit every suggested field before saving.',
-        idempotencyKey: 'listing-${DateTime.now().microsecondsSinceEpoch}',
+        idempotencyKey: _agentIdempotencyKey,
       );
 
       final draft = response['draft'];
