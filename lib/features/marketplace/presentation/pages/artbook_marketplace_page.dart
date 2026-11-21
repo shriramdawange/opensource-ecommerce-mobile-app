@@ -230,7 +230,7 @@ class _ArtBookMarketplacePageState extends State<ArtBookMarketplacePage> {
                         ),
                       ),
                       Text(
-                        '\${_products.length} items',
+                        '${_products.length} items',
                         style: const TextStyle(color: Color(0xFF8B735F), fontSize: 12),
                       ),
                     ],
@@ -335,7 +335,7 @@ class _ArtBookMarketplacePageState extends State<ArtBookMarketplacePage> {
                                       ),
                                       const SizedBox(height: 8),
                                       Text(
-                                        '₹\${product['price'] ?? '—'}',
+                                        '₹${product['price'] ?? '—'}',
                                         style: const TextStyle(
                                           color: Color(0xFF6F3E2B),
                                           fontWeight: FontWeight.w900,
