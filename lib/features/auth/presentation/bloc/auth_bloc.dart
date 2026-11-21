@@ -3,7 +3,6 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:equatable/equatable.dart';
 import '../../data/repository/auth_repository.dart';
 import '../../domain/services/auth_storage.dart';
-import '../../../../core/graphql/graphql_client.dart';
 import '../../../../core/notifications/device_token_service.dart';
 
 // ─── EVENTS ───
@@ -231,7 +230,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
         userId: userId,
       );
 
-      debugPrint('✅ Login successful — token: ${token.substring(0, 10)}..., userId: $userId');
+      debugPrint('✅ ArtBook login successful for userId: $userId');
       emit(
         AuthAuthenticated(
           token: token,
@@ -336,8 +335,6 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     }
     await AuthStorage.clearAuth();
     // Device token is cleared by repository.logout()
-    // Clear GraphQL HiveStore cache on logout
-    await GraphQLClientProvider.clearCache();
     debugPrint('✅ Logged out');
     emit(const AuthUnauthenticated());
   }
