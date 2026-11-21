@@ -77,13 +77,22 @@ async function callModel(input: {
   language: string;
   imageUrls: string[];
 }) {
-  const endpoint = Deno.env.get("ARTBOOK_LLM_BASE_URL");
-  const apiKey = Deno.env.get("ARTBOOK_LLM_API_KEY");
-  const model = Deno.env.get("ARTBOOK_LLM_MODEL");
+  const configuredBaseUrl = Deno.env.get("ARTBOOK_LLM_BASE_URL")?.trim();
+  const apiKey = Deno.env.get("ARTBOOK_LLM_API_KEY")?.trim();
+  const model = Deno.env.get("ARTBOOK_LLM_MODEL")?.trim();
 
-  if (!endpoint || !apiKey || !model) {
+  if (!configuredBaseUrl || !apiKey || !model) {
     throw new Error("ARTBOOK_AI_PROVIDER_NOT_CONFIGURED");
   }
+
+  // Accept either the OpenRouter API base URL or a full chat-completions URL.
+  let normalizedBaseUrl = configuredBaseUrl;
+  while (normalizedBaseUrl.endsWith("/")) {
+    normalizedBaseUrl = normalizedBaseUrl.slice(0, -1);
+  }
+  const endpoint = normalizedBaseUrl.endsWith("/chat/completions")
+    ? normalizedBaseUrl
+    : normalizedBaseUrl + "/chat/completions";
 
   const systemPrompt = [
     "You are ArtBook's artisan listing assistant.",
@@ -118,10 +127,13 @@ async function callModel(input: {
         headers: {
           "Authorization": "Bearer " + apiKey,
           "Content-Type": "application/json",
+          "HTTP-Referer": "https://gensolutions.in",
+          "X-Title": "ArtBook",
         },
         body: JSON.stringify({
           model,
           temperature: 0.2,
+          max_tokens: 1200,
           response_format: { type: "json_object" },
           messages: [
             { role: "system", content: systemPrompt },
