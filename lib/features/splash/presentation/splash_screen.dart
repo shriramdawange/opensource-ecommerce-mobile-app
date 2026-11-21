@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
+import '../../../core/theme/app_theme.dart';
+
 class SplashScreen extends StatefulWidget {
   final Widget nextScreen;
 
@@ -14,37 +16,75 @@ class _SplashScreenState extends State<SplashScreen> {
   @override
   void initState() {
     super.initState();
-    // Hide the status bar for a full-screen splash experience
     SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
-    
-    // Navigate to the next screen after 3 seconds
-    Future.delayed(const Duration(seconds: 3), () {
-      if (mounted) {
-        Navigator.of(context).pushReplacement(
-          MaterialPageRoute(builder: (_) => widget.nextScreen),
-        );
-      }
+
+    Future.delayed(const Duration(milliseconds: 1400), () {
+      if (!mounted) return;
+      Navigator.of(context).pushReplacement(
+        MaterialPageRoute(builder: (_) => widget.nextScreen),
+      );
     });
   }
 
   @override
   void dispose() {
-    // Restore the status bar when leaving the splash screen
-    SystemChrome.setEnabledSystemUIMode(SystemUiMode.manual,
-        overlays: SystemUiOverlay.values);
+    SystemChrome.setEnabledSystemUIMode(
+      SystemUiMode.manual,
+      overlays: SystemUiOverlay.values,
+    );
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: const Color(0xFFFAF7F1),
       body: Center(
-        child: Image.asset(
-          'assets/images/splash.png',
-          width: double.infinity,
-          height: double.infinity,
-          fit: BoxFit.cover,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              width: 88,
+              height: 88,
+              decoration: BoxDecoration(
+                color: const Color(0xFF6F3E2B),
+                borderRadius: BorderRadius.circular(26),
+              ),
+              child: const Icon(
+                Icons.auto_awesome,
+                color: Color(0xFFFFE8C9),
+                size: 44,
+              ),
+            ),
+            const SizedBox(height: 18),
+            const Text(
+              'ARTBOOK',
+              style: TextStyle(
+                color: Color(0xFF4B2B20),
+                fontSize: 25,
+                fontWeight: FontWeight.w900,
+                letterSpacing: 3.2,
+              ),
+            ),
+            const SizedBox(height: 7),
+            const Text(
+              'Stories made by hand',
+              style: TextStyle(
+                color: Color(0xFF8B735F),
+                fontSize: 13,
+                letterSpacing: 0.5,
+              ),
+            ),
+            const SizedBox(height: 28),
+            const SizedBox(
+              width: 22,
+              height: 22,
+              child: CircularProgressIndicator(
+                strokeWidth: 2,
+                color: AppColors.primary500,
+              ),
+            ),
+          ],
         ),
       ),
     );
