@@ -85,7 +85,7 @@ class _ArtisanListingsPageState extends State<ArtisanListingsPage> {
       );
       final approvalId = request['approval_id']?.toString();
       if (approvalId == null || approvalId.isEmpty) {
-        throw const AuthException('The publication approval was not created.');
+        throw StateError('The publication approval was not created.');
       }
 
       await _repository.decideApproval(
