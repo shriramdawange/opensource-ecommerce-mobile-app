@@ -8,7 +8,7 @@ import 'package:bagisto_flutter/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:graphql_flutter/graphql_flutter.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 import 'store_config_fakes.dart';
 
@@ -28,10 +28,7 @@ Future<void> _pump(WidgetTester tester, StoreConfigCubit config) async {
   addTearDown(config.close);
   final auth = AuthBloc(
     repository: AuthRepository(
-      client: GraphQLClient(
-        link: HttpLink('https://example.com/graphql'),
-        cache: GraphQLCache(store: InMemoryStore()),
-      ),
+      client: SupabaseClient('https://example.supabase.co', 'test-anon-key'),
     ),
   );
   addTearDown(auth.close);

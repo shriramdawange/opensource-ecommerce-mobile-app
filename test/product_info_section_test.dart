@@ -6,7 +6,7 @@ import 'package:bagisto_flutter/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:graphql_flutter/graphql_flutter.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 Widget _wrap(ProductModel product) => MaterialApp(
   localizationsDelegates: AppLocalizations.localizationsDelegates,
@@ -15,10 +15,7 @@ Widget _wrap(ProductModel product) => MaterialApp(
   home: BlocProvider(
     create: (_) => AuthBloc(
       repository: AuthRepository(
-        client: GraphQLClient(
-          link: HttpLink('https://example.com/graphql'),
-          cache: GraphQLCache(store: InMemoryStore()),
-        ),
+        client: SupabaseClient('https://example.supabase.co', 'test-anon-key'),
       ),
     ),
     child: Scaffold(

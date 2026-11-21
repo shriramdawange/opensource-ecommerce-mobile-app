@@ -12,6 +12,7 @@ import 'package:bagisto_flutter/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:graphql_flutter/graphql_flutter.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -76,7 +77,7 @@ Future<_RecordingCartRepository> _pumpCart(
 }) async {
   final repository = _RecordingCartRepository();
   final cartBloc = _TestCartBloc(repository)..seed(cart);
-  final auth = AuthBloc(repository: AuthRepository(client: _client()));
+  final auth = AuthBloc(repository: AuthRepository(client: SupabaseClient('https://example.supabase.co', 'test-anon-key')));
   addTearDown(cartBloc.close);
   addTearDown(auth.close);
   addTearDown(config.close);

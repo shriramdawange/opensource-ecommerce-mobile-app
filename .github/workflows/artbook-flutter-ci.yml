@@ -66,7 +66,13 @@ jobs:
             lib/features/commerce/presentation/pages/artbook_cart_page.dart \
             lib/features/commerce/presentation/pages/artbook_orders_page.dart \
             lib/features/account/presentation/pages/artbook_account_page.dart \
-            lib/features/splash/presentation/splash_screen.dart
+            lib/features/splash/presentation/splash_screen.dart \
+            test/add_review_page_test.dart \
+            test/store_config_account_test.dart \
+            test/store_config_cart_test.dart \
+            test/store_config_reviews_test.dart \
+            test/product_info_section_test.dart \
+            test/store_config_reviewer_name_test.dart
 
       - name: Analyze application code
         shell: bash
@@ -100,10 +106,8 @@ jobs:
     name: Legacy Flutter tests (known migration failures)
     runs-on: ubuntu-latest
     timeout-minutes: 30
-    # Existing Bagisto/GraphQL-era tests currently fail to compile after the
-    # ArtBook repositories switched to Supabase. Keep them visible but don't
-    # block delivery of a buildable APK while those test doubles are migrated.
-    continue-on-error: true
+    # Require the test suite to pass. Tests for Supabase-backed repositories
+    # use local Supabase clients; remaining GraphQL clients cover legacy data repos.
     steps:
       - name: Checkout
         uses: actions/checkout@v4

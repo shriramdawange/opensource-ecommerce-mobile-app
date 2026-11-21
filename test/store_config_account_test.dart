@@ -12,17 +12,13 @@ import 'package:bagisto_flutter/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:graphql_flutter/graphql_flutter.dart';
 
 import 'store_config_fakes.dart';
 
 AuthBloc _authBloc() => AuthBloc(
-  repository: AuthRepository(
-    client: GraphQLClient(
-      link: HttpLink('https://example.com/graphql'),
-      cache: GraphQLCache(store: InMemoryStore()),
-    ),
-  ),
+  repository: AuthRepository(client: SupabaseClient('https://example.supabase.co', 'test-anon-key')),
 );
 
 Future<void> _pumpMenu(WidgetTester tester, StoreConfigCubit cubit) async {
@@ -112,13 +108,7 @@ void wishlistSectionTests() {
 }
 
 class _RecordingAuthRepository extends AuthRepository {
-  _RecordingAuthRepository()
-    : super(
-        client: GraphQLClient(
-          link: HttpLink('https://example.com/graphql'),
-          cache: GraphQLCache(store: InMemoryStore()),
-        ),
-      );
+  _RecordingAuthRepository() : super(client: SupabaseClient('https://example.supabase.co', 'test-anon-key'));
 
   bool? subscribed;
 

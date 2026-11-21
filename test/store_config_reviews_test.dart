@@ -9,7 +9,7 @@ import 'package:bagisto_flutter/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:graphql_flutter/graphql_flutter.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 import 'store_config_fakes.dart';
 
@@ -17,10 +17,7 @@ class _SeededAuthBloc extends AuthBloc {
   _SeededAuthBloc(AuthState seeded)
     : super(
         repository: AuthRepository(
-          client: GraphQLClient(
-            link: HttpLink('https://example.com/graphql'),
-            cache: GraphQLCache(store: InMemoryStore()),
-          ),
+          client: SupabaseClient('https://example.supabase.co', 'test-anon-key'),
         ),
       ) {
     emit(seeded);

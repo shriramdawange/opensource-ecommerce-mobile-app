@@ -14,3 +14,13 @@ const int channelId = 1;
 
 /// Company name
 const String companyName = 'Your Company Name';
+
+/// Optional base URL for legacy Bagisto home widgets.
+///
+/// ArtBook's active Supabase-backed navigation does not require a Bagisto
+/// storefront. Leave this unset for ArtBook-only builds; configure it only
+/// when a legacy Bagisto screen is intentionally enabled.
+const String bagistoPublicBaseUrl = String.fromEnvironment(
+  'BAGISTO_PUBLIC_BASE_URL',
+  defaultValue: '',
+);

@@ -549,6 +549,7 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
             sections.add(
               ImageCarousel(
                 images: bannerImages,
+                baseUrl: bagistoPublicBaseUrl,
                 onBannerTap: (banner) => _openLink(context, banner.link),
               ),
             );
