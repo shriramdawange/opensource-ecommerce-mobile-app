@@ -198,7 +198,7 @@ class _ArtBookOrdersPageState extends State<ArtBookOrdersPage> {
                                   children: [
                                     const Expanded(child: Text('Order total', style: TextStyle(fontWeight: FontWeight.w700))),
                                     Text(
-                                      '$currency \${total.toStringAsFixed(2)}',
+                                      '$currency ${total.toStringAsFixed(2)}',
                                       style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 16),
                                     ),
                                   ],
