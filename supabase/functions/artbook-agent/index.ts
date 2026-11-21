@@ -269,10 +269,16 @@ Deno.serve(async (req: Request) => {
 
     if (stepError || !step) throw stepError ?? new Error("CASE_STEP_CREATE_FAILED");
 
-    const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
-    const imageUrls = mediaPaths.map((path: string) =>
-      supabaseUrl + "/storage/v1/object/public/artbook-product-media/" + encodeStoragePath(path)
-    );
+    const imageUrls: string[] = [];
+    for (const path of mediaPaths) {
+      const { data: signed, error: signedError } = await admin.storage
+        .from("artbook-agent-intake")
+        .createSignedUrl(path, 90);
+      if (signedError || !signed?.signedUrl) {
+        throw new Error("PRIVATE_MEDIA_ACCESS_FAILED");
+      }
+      imageUrls.push(signed.signedUrl);
+    }
 
     try {
       const draft = await callModel({ transcript, artisanNotes, language, imageUrls });
