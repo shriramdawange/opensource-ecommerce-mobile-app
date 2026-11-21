@@ -111,9 +111,6 @@ class ArtisanProductRepository {
     String? altText,
     bool isPrimary = true,
   }) async {
-    final extension = fileName.contains('.')
-        ? fileName.split('.').last.toLowerCase()
-        : 'jpg';
     final safeFileName = fileName.replaceAll(RegExp(r'[^a-zA-Z0-9._-]'), '_');
     final path = '$_userId/$productId/${DateTime.now().microsecondsSinceEpoch}_$safeFileName';
 
@@ -140,4 +137,52 @@ class ArtisanProductRepository {
 
     return client.storage.from('artbook-product-media').getPublicUrl(path);
   }
+  Future<String> uploadAgentImage({
+    required Uint8List bytes,
+    required String fileName,
+    required String contentType,
+  }) async {
+    final safeFileName = fileName.replaceAll(RegExp(r'[^a-zA-Z0-9._-]'), '_');
+    final path = '$_userId/intake/${DateTime.now().microsecondsSinceEpoch}_$safeFileName';
+
+    await client.storage.from('artbook-product-media').uploadBinary(
+      path,
+      bytes,
+      fileOptions: FileOptions(contentType: contentType, upsert: false),
+    );
+    return path;
+  }
+
+  Future<Map<String, dynamic>> requestListingPublication({
+    required String productId,
+  }) async {
+    final response = await client.functions.invoke(
+      'request-listing-publication',
+      body: {'product_id': productId},
+    );
+    if (response.status < 200 || response.status >= 300) {
+      final details = response.data is Map ? response.data['error'] : null;
+      throw AuthException(details?.toString() ?? 'Publication request failed.');
+    }
+    return Map<String, dynamic>.from(response.data as Map);
+  }
+
+  Future<Map<String, dynamic>> decideApproval({
+    required String approvalId,
+    required bool approve,
+  }) async {
+    final response = await client.functions.invoke(
+      'agent-approval',
+      body: {
+        'approval_id': approvalId,
+        'decision': approve ? 'approve' : 'reject',
+      },
+    );
+    if (response.status < 200 || response.status >= 300) {
+      final details = response.data is Map ? response.data['error'] : null;
+      throw AuthException(details?.toString() ?? 'The approval could not be recorded.');
+    }
+    return Map<String, dynamic>.from(response.data as Map);
+  }
+
 }
