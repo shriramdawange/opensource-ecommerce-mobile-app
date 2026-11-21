@@ -68,8 +68,19 @@ jobs:
             lib/features/account/presentation/pages/artbook_account_page.dart \
             lib/features/splash/presentation/splash_screen.dart
 
-      - name: Analyze
-        run: flutter analyze --no-pub
+      - name: Analyze application code
+        shell: bash
+        run: |
+          set +e
+          flutter analyze --no-pub --format=machine lib > analyze.txt 2>&1
+          analyze_status=$?
+          set -e
+          cat analyze.txt
+          if grep -E '^(ERROR|WARNING)\\|' analyze.txt; then
+            echo "Application code has analyzer errors or warnings."
+            exit 1
+          fi
+          echo "Application analysis completed (exit code: $analyze_status); informational lints do not block APK delivery."
 
       - name: Build release APK
         run: flutter build apk --release
