@@ -24,8 +24,9 @@ class _ArtBookProductDetailPageState extends State<ArtBookProductDetailPage> {
       orElse: () => media.first,
     );
     if (row is! Map || row['storage_path'] == null) return null;
+    final bucket = row['storage_bucket']?.toString() ?? 'artbook-product-media';
     return ArtBookSupabase.client.storage
-        .from('artbook-product-media')
+        .from(bucket)
         .getPublicUrl(row['storage_path'].toString());
   }
 
