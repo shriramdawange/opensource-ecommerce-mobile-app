@@ -10,7 +10,6 @@ import 'core/navigation/route_observer.dart';
 import 'core/supabase/artbook_supabase.dart';
 import 'core/theme/app_theme.dart';
 import 'core/theme/theme_cubit.dart';
-import 'core/widgets/app_update_gate.dart';
 import 'features/auth/data/repository/auth_repository.dart';
 import 'features/auth/presentation/bloc/auth_bloc.dart';
 import 'features/home/presentation/pages/main_shell.dart';
@@ -83,9 +82,7 @@ class ArtBookApp extends StatelessWidget {
                   );
                 },
                 home: SplashScreen(
-                  nextScreen: AppUpdateGate(
-                    child: MainShell(key: MainShell.navigatorKey),
-                  ),
+                  nextScreen: MainShell(key: MainShell.navigatorKey),
                 ),
               );
             },
