@@ -1,79 +1,61 @@
 import 'package:flutter/foundation.dart';
-import 'package:graphql_flutter/graphql_flutter.dart';
-import '../../../../core/error/error_mapper.dart';
-import '../../../../core/graphql/auth_mutations.dart';
+import 'package:supabase_flutter/supabase_flutter.dart' as supabase;
+
 import '../../../../core/notifications/device_token_service.dart';
 import '../models/auth_models.dart';
 
-/// Repository for authentication API calls via GraphQL.
-/// Matches Bagisto API: createCustomerLogin, createCustomer,
-/// createForgotPassword, createLogout.
-/// Also handles FCM device token management.
+/// ArtBook authentication repository.
+///
+/// Supabase Auth is the identity provider. The CustomerLogin/Customer objects
+/// are retained as an adapter for the existing Flutter authentication screens
+/// while the remaining Bagisto-backed features are migrated incrementally.
 class AuthRepository {
-  final GraphQLClient client;
+  final supabase.SupabaseClient client;
 
   AuthRepository({required this.client});
 
-  /// Login with email + password
-  /// Returns [CustomerLogin] with token on success.
-  /// Automatically includes FCM device token in the request if available.
+  supabase.Session? get currentSession => client.auth.currentSession;
+  supabase.User? get currentUser => client.auth.currentUser;
+
   Future<CustomerLogin> login({
     required String email,
     required String password,
     String? deviceToken,
   }) async {
-    debugPrint('🔐 AuthRepo.login — email: $email');
+    try {
+      final response = await client.auth.signInWithPassword(
+        email: email.trim(),
+        password: password,
+      );
 
-    // Get device token if not provided
-    final token = deviceToken ?? await DeviceTokenService.getDeviceToken();
+      final user = response.user;
+      final session = response.session;
+      if (user == null || session == null) {
+        throw const AuthException(
+          'Sign-in did not return an active session. Please try again.',
+        );
+      }
 
-    final result = await client.mutate(
-      MutationOptions(
-        document: gql(loginMutation),
-        variables: {
-          'input': {
-            'email': email,
-            'password': password,
-            if (token != null) 'deviceToken': token,
-          },
-        },
-        fetchPolicy: FetchPolicy.noCache,
-      ),
-    );
-
-    if (result.hasException) {
-      final message = _extractErrorMessage(result.exception!);
-      debugPrint('🔐 AuthRepo.login — exception: $message');
-      throw AuthException(message);
-    }
-
-    debugPrint('🔐 AuthRepo.login — raw data: ${result.data}');
-
-    final data = result.data?['createCustomerLogin']?['customerLogin'];
-    if (data == null) {
-      debugPrint('🔐 AuthRepo.login — customerLogin is null');
-      throw AuthException('Invalid response from server');
-    }
-
-    final loginResult = CustomerLogin.fromJson(data);
-    if (!loginResult.success) {
-      throw AuthException(loginResult.message ?? 'Login failed');
-    }
-
-    debugPrint(
-      '🔐 AuthRepo.login — success, token: ${loginResult.token?.substring(0, 10)}...',
-    );
-    if (token != null) {
-      debugPrint(
-        '🔐 AuthRepo.login — device token sent: ${token.substring(0, 20)}...',
+      debugPrint('ArtBook Auth: signed in user ' + user.id);
+      return CustomerLogin(
+        id: user.id,
+        token: session.accessToken,
+        success: true,
+        message: 'Signed in successfully.',
+      );
+    } on supabase.AuthException catch (error) {
+      throw AuthException(error.message);
+    } on AuthException {
+      rethrow;
+    } catch (error, stackTrace) {
+      debugPrint('ArtBook Auth login error: $error');
+      debugPrintStack(stackTrace: stackTrace);
+      throw const AuthException(
+        'Unable to sign in right now. Please try again.',
       );
     }
-    return loginResult;
   }
 
-  /// Register a new customer.
-  /// Matches Bagisto API: firstName, lastName, email, password, confirmPassword
-  /// Automatically includes FCM device token in the request if available.
   Future<Customer> register({
     required String firstName,
     required String lastName,
@@ -83,135 +65,84 @@ class AuthRepository {
     String? deviceToken,
     bool subscribeToNewsletter = true,
   }) async {
-    debugPrint('📝 AuthRepo.register — $firstName $lastName <$email>');
-
-    // Get device token if not provided
-    final token = deviceToken ?? await DeviceTokenService.getDeviceToken();
-
-    final result = await client.mutate(
-      MutationOptions(
-        document: gql(registerMutation),
-        variables: {
-          'input': {
-            'firstName': firstName,
-            'lastName': lastName,
-            'email': email,
-            'password': password,
-            'confirmPassword': confirmPassword,
-            'status': '1',
-            'isVerified': '1',
-            'isSuspended': '0',
-            'subscribedToNewsLetter': subscribeToNewsletter,
-            if (token != null) 'deviceToken': token,
-          },
-        },
-        fetchPolicy: FetchPolicy.noCache,
-      ),
-    );
-
-    if (result.hasException) {
-      final message = _extractErrorMessage(result.exception!);
-      debugPrint('📝 AuthRepo.register — exception: $message');
-      throw AuthException(message);
+    if (password != confirmPassword) {
+      throw const AuthException('Passwords do not match.');
     }
 
-    debugPrint('📝 AuthRepo.register — raw data: ${result.data}');
+    final first = firstName.trim();
+    final last = lastName.trim();
+    final fullName = [first, last].where((part) => part.isNotEmpty).join(' ');
 
-    final data = result.data?['createCustomer']?['customer'];
-    if (data == null) {
-      debugPrint('📝 AuthRepo.register — customer is null in response');
-      throw AuthException('Invalid response from server');
-    }
-
-    final customer = Customer.fromJson(data);
-    debugPrint(
-      '📝 AuthRepo.register — success: ${customer.displayName}, token: ${customer.token}',
-    );
-    if (token != null) {
-      debugPrint(
-        '📝 AuthRepo.register — device token sent: ${token.substring(0, 20)}...',
-      );
-    }
-    return customer;
-  }
-
-  /// Send forgot-password email
-  Future<String> forgotPassword({required String email}) async {
-    final result = await client.mutate(
-      MutationOptions(
-        document: gql(forgotPasswordMutation),
-        variables: {'email': email},
-        fetchPolicy: FetchPolicy.noCache,
-      ),
-    );
-
-    if (result.hasException) {
-      final message = _extractErrorMessage(result.exception!);
-      throw AuthException(message);
-    }
-
-    final data = result.data?['createForgotPassword']?['forgotPassword'];
-    if (data == null) {
-      throw AuthException('Invalid response from server');
-    }
-
-    final success = data['success'] as bool? ?? false;
-    final message = data['message'] as String? ?? '';
-
-    if (!success) {
-      throw AuthException(message.isNotEmpty ? message : 'Request failed');
-    }
-
-    return message;
-  }
-
-  /// Logout (requires authenticated client)
-  /// Sends device token to API for cleanup.
-  /// Clears device token from local storage after logout.
-  Future<bool> logout() async {
     try {
-      // Get device token to send to API
-      final token = await DeviceTokenService.getDeviceToken();
-
-      final result = await client.mutate(
-        MutationOptions(
-          document: gql(logoutMutation),
-          variables: {
-            'input': {if (token != null) 'deviceToken': token},
-          },
-          fetchPolicy: FetchPolicy.noCache,
-        ),
+      final response = await client.auth.signUp(
+        email: email.trim(),
+        password: password,
+        data: {
+          'full_name': fullName,
+          'first_name': first,
+          'last_name': last,
+          'preferred_language': 'en-IN',
+        },
       );
 
-      if (result.hasException) {
-        final message = _extractErrorMessage(result.exception!);
-        throw AuthException(message);
+      final user = response.user;
+      if (user == null) {
+        throw const AuthException(
+          'The account could not be created. Please try again.',
+        );
       }
 
-      final data = result.data?['createLogout']?['logout'];
-
-      // Clear device token on logout
-      await DeviceTokenService.clearDeviceToken();
-      debugPrint(
-        '🔐 AuthRepo.logout — device token sent to API and cleared locally',
+      // A null session is expected when email confirmation is enabled.
+      // The database trigger creates the private profile row on auth.users INSERT.
+      return Customer(
+        id: user.id,
+        firstName: first,
+        lastName: last,
+        email: user.email ?? email.trim(),
+        name: fullName,
+        token: response.session?.accessToken,
       );
-
-      return data?['success'] as bool? ?? false;
-    } catch (e) {
-      debugPrint('❌ AuthRepo.logout — error: $e');
-      // Still clear device token even if logout API fails
-      await DeviceTokenService.clearDeviceToken();
+    } on supabase.AuthException catch (error) {
+      throw AuthException(error.message);
+    } on AuthException {
       rethrow;
+    } catch (error, stackTrace) {
+      debugPrint('ArtBook Auth registration error: $error');
+      debugPrintStack(stackTrace: stackTrace);
+      throw const AuthException(
+        'Unable to create your account right now. Please try again.',
+      );
     }
   }
 
-  /// Extract a readable error message from GraphQL exceptions
-  String _extractErrorMessage(OperationException exception) {
-    return ErrorMapper.getUserMessage(exception);
+  Future<String> forgotPassword({required String email}) async {
+    try {
+      await client.auth.resetPasswordForEmail(email.trim());
+      return 'Password reset instructions have been requested. Check your email.';
+    } on supabase.AuthException catch (error) {
+      throw AuthException(error.message);
+    } catch (error, stackTrace) {
+      debugPrint('ArtBook password reset error: $error');
+      debugPrintStack(stackTrace: stackTrace);
+      throw const AuthException(
+        'Unable to request a password reset right now.',
+      );
+    }
+  }
+
+  Future<bool> logout() async {
+    try {
+      await client.auth.signOut();
+      return true;
+    } on supabase.AuthException catch (error) {
+      throw AuthException(error.message);
+    } finally {
+      await DeviceTokenService.clearDeviceToken();
+    }
   }
 }
 
-/// Custom exception for auth errors
+/// User-facing authentication error used by the existing AuthBloc.
 class AuthException implements Exception {
   final String message;
   const AuthException(this.message);
