@@ -1,211 +1,109 @@
-<p align="center">
-    <a href="http://www.bagisto.com"><img src="https://bagisto.com/wp-content/themes/bagisto/images/logo.png" alt="Total Downloads"></a>
-</p>
+# ArtBook
 
-<p align="center">
-    <a href="https://twitter.com/intent/follow?screen_name=bagistoshop"><img src="https://img.shields.io/twitter/follow/bagistoshop?style=social"></a>
-    <a href="https://www.youtube.com/channel/UCbrfqnhyiDv-bb9QuZtonYQ"><img src="https://img.shields.io/youtube/channel/subscribers/UCbrfqnhyiDv-bb9QuZtonYQ?style=social"></a>
-    <a href="https://deepwiki.com/bagisto/opensource-ecommerce-mobile-app"><img src="https://deepwiki.com/badge.svg" alt="Ask DeepWiki"></a>
-</p>
+**An AI-powered, direct-to-consumer creative marketplace for artisans and weavers.**
 
+ArtBook helps traditional makers create digital product identities, preserve the story behind their craft, reach buyers, understand evidence-based market comparisons and manage orders while retaining control over important decisions.
 
-# Open Source eCommerce Mobile App
+This repository is the Flutter application and Supabase backend for the ArtBook MVP. It began as a fork of [Bagisto's open-source eCommerce mobile app](https://github.com/bagisto/opensource-ecommerce-mobile-app) (MIT License). Existing Flutter components are being reused and adapted; the active ArtBook runtime uses Supabase rather than requiring a Bagisto/Laravel server.
 
-[Bagisto](https://bagisto.com/en/) revolutionizes the world of mobile commerce with its open-source eCommerce mobile app solution. This open-source mobile ecommerce app seamlessly transforms your Bagisto store into a powerful mobile platform, providing real-time synchronization of products and categories. With a user-friendly interface, managing orders becomes a breeze, making it an essential tool for tech-savvy individuals and those new to eCommerce.
+## Current architecture
 
-This mobile app, built on the foundation of the Bagisto eCommerce framework and leveraging the robust Laravel stack, offers many features for a comprehensive and efficient mobile shopping experience. The app ensures easy product information management and accelerates time-to-market for your products, all while giving you complete control over your store.
+- **Flutter:** Android/iOS client, adapted from the upstream Bagisto Flutter storefront.
+- **Supabase Auth:** email/password authentication and user sessions.
+- **Supabase PostgreSQL:** artisan profiles, products, buyer requests, carts, orders, negotiations and agent cases.
+- **Row Level Security:** user- and participant-scoped access to application tables.
+- **Supabase Storage:** private intake/draft media and public media only after artisan-approved publication.
+- **Supabase Edge Functions:** listing agent, price guidance, buyer matching, publication approvals and order workflow.
 
-# Live Demo
+The database schema and Edge Function source are in `supabase/`. Supabase client configuration is centralised in `lib/core/supabase/artbook_supabase.dart`.
 
-Android: <https://play.google.com/store/apps/details?id=com.webkul.bagisto.mobikul>
+## MVP flows in progress
 
-iOS: <https://apps.apple.com/us/app/mobikul-bagisto-laravel-app/id6447519140>
+1. Sign up, sign in, password reset and session restoration.
+2. Create and edit an artisan profile.
+3. Create a product draft with photos, story, category, price, available stock and private minimum acceptable price.
+4. Voice-first listing intake in Marathi, Hindi or English; image and transcript can be sent to the ArtBook listing agent.
+5. Review and edit AI suggestions before saving a draft.
+6. Request publication and explicitly approve making the listing public.
+7. Browse published products, maker profiles and craft categories.
+8. Add products to a buyer cart and request an order.
+9. Artisan approves or declines an order; stock is reserved only after acceptance.
+10. View buyer and artisan orders.
 
-# Features
+## Development setup
 
-The open-source ecommerce mobile app comes with an array of features to improve your customers' shopping experience.
+### Requirements
 
-## Interactive Home Page and Search
+- Flutter 3.38.9 (see upstream compatibility notes)
+- Dart 3.10.8 or compatible SDK from the Flutter release
+- Android Studio / Android SDK for Android development
+- Xcode on macOS for iOS development
 
-![Interactive Home Page and Search](Docs/features_images/Interactive%20Home%20Page%20and%20Search.png)
+### Install
 
-## All Type Product Supported
-
-![All Type Product Supported](Docs/features_images/All%20Type%20Product%20Supported.png)
-
-## Dark Mode and Push Notification 
-
-![Dark Mode and Push Notification](Docs/features_images/Dark%20Mode%20and%20Push%20Notification.png)
-
-## Discount Coupons and Guest Checkout
-
-![Discount Coupons and Guest Checkout](Docs/features_images/Discount%20Coupons%20and%20Guest%20Checkout.png)
-
-## Wishlist and Product Category
-
-![Wishlist and Product Category](Docs/features_images/Wishlist%20and%20Product%20Category.png)
-
-## Order Details and Product Reviews
-
-![Order Details and Product Reviews](Docs/features_images/Order%20Details%20and%20Product%20Reviews.png)
-
-## Installation Guide
-
-Before beginning with the installation, you will need the following with the mentioned versions
-
-- Bagisto Version - Bagisto v2.0.0 or higher
-- Android Studio Meerkat | 2024.3.2
-- Flutter Version - 3.38.9
-- Dart - 3.10.8
-- Xcode - 26.3
-- Swift - 6.1
-
-Make sure you have installed the [API module](https://github.com/bagisto/bagisto-api) and set this up properly on your bagisto.
-
-> NOTE: It is recommended that you run a simple Hello World program in Flutter first before proceeding further so that you are sure that the environment is properly set up.
-
-## Installation Steps
-
-### Clone the repository
-
-- Open your terminal or command prompt
-- Navigate to the directory where you want to save the project
-- Use the git clone command followed by the repository URL
-
-```sh
-git clone https://github.com/bagisto/opensource-ecommerce-mobile-app.git
-```
-
-### Install dependencies
-
-- Navigate to the project's directory
-
-```sh
-cd <repository-name>
-```
-
-- Run the following command to install the required packages
-
-```sh
+```bash
+git clone https://github.com/shriramdawange/opensource-ecommerce-mobile-app.git
+cd opensource-ecommerce-mobile-app
+git checkout agent
 flutter pub get
-```
-
-### Connect a device or emulator
-
-- Physical Device
-
-  1. Enable USB debugging on your device
-  2. Connect it to your computer using a USB cable.
-
-- Emulator
-
-  1. Start an Android or iOS emulator using your preferred IDE or tools.
-
-### Run the Project
-
-- Use the following command to build and run the project
-
-```sh
+flutter gen-l10n
 flutter run
 ```
 
-## Minimum Versions
+ArtBook uses compile-time configuration overrides:
 
-- Android: 22
-- iOS: 15.5
-
-## Configurations Steps
-
-### For Setup
-
-Change the baseDomain  as per your store
-
-Go to `lib/core/constants/api_constants.dart` and configure the following:
-
-```dart
-/// Bagisto GraphQL endpoint (e.g., https://your-bagisto-server.com/graphql)
-const String bagistoEndpoint = 'YOUR_BAGISTO_ENDPOINT_HERE';
-
-/// Storefront key for Bagisto API
-/// Get this from your Bagisto admin panel
-const String storefrontKey = 'YOUR_STOREFRONT_KEY_HERE';
-
-/// Company name (optional metadata)
-const String companyName = 'Your Company Name';
+```bash
+flutter run \\
+  --dart-define=ARTBOOK_SUPABASE_URL=https://<project-ref>.supabase.co \\
+  --dart-define=ARTBOOK_SUPABASE_PUBLISHABLE_KEY=sb_publishable_...
 ```
 
-### For Theme
+The current development project URL and publishable key are configured as public-client defaults in the ArtBook Supabase client file. A publishable key may be used in a mobile app only with properly configured RLS. **Never place a Supabase secret key or service-role key in Flutter code, build defines, assets or source control.**
 
-In the `AppColors` class, find and modify the primary colors:
+## AI provider configuration
 
-```dart
-class AppColors {
-  // Primary Colors - Modify these hex values to change the app's primary color
-  static const Color primary500 = Color(0xFFFF6900);  // Main primary color
-  static const Color primary600 = Color(0xFFF54900);  // Darker variant for pressed states
-  // ...
-}
-```
+The listing agent uses an OpenAI-compatible chat-completions endpoint. Configure these values as **Supabase Edge Function secrets**, not in the Flutter app:
 
-**To change the primary color:**
-- Replace `0xFFFF6900` with your desired color hex value
-- Adjust `primary600` to a slightly darker shade of your primary color
+- `ARTBOOK_LLM_BASE_URL`
+- `ARTBOOK_LLM_API_KEY`
+- `ARTBOOK_LLM_MODEL`
 
-### For Push Notification Service
+Until an AI provider is configured, manual product draft creation works, but the voice/photo-to-AI-listing action returns a clear provider-not-configured response.
 
-- Android
+The agent is instructed to avoid inventing an artisan's identity, craft origin, materials, technique, heritage or provenance. Generated information remains a draft until the artisan reviews it.
 
-Replace "google-services.json".
+## Edge Functions
 
-- iOS
+All deployed functions require a valid Supabase JWT:
 
-Replace "GoogleService-Info.plist".
+| Function | Purpose |
+|---|---|
+| `artbook-agent` | Creates a durable case and an artisan-review listing draft |
+| `save-listing-draft` | Saves the reviewed listing and private media references |
+| `request-listing-publication` | Creates a publication approval |
+| `agent-approval` | Executes an explicit approval; moves media to public storage only on publication |
+| `price-guidance` | Produces indicative pricing from verified comparable observations |
+| `buyer-matching` | Matches published products to public buyer briefs |
+| `place-order` | Creates an order request after explicit buyer confirmation |
 
-> Helpful Articles
+## MVP constraints (not yet production-ready)
 
-> Android  → <https://mobikul.com/knowledgebase/generating-google-service-file-enable-fcm-firebase-cloud-messaging-android-application/>
+- The AI provider secret must be configured before AI listing generation works.
+- Buyer matching currently uses a transparent rules-based score; vector/embedding semantic matching is not yet implemented.
+- Price guidance requires at least three recent, verified comparable observations. It returns `insufficient_data` rather than inventing a rate.
+- Order requests currently support a single artisan and a single currency per cart.
+- Payment capture, shipping calculation, tax calculation, refunds, fulfilment integrations and legal invoicing are not implemented.
+- The marketplace requires real artisan onboarding and product data before it can demonstrate live inventory.
+- Production release still needs final app identifiers, notification credentials, privacy policy, terms, payment/compliance review and security testing.
 
-> iOS → <https://mobikul.com/knowledgebase/generating-new-googleservice-info-plist-file-fcm-based-project-ios-app/>
+## Git workflow
 
-### For Application Title
+- Development branch: `agent`
+- Stable branch: `main`
+- All implementation and fixes are made on `agent`.
+- Review and test the branch before opening a pull request.
+- **Do not merge into `main` without Shriram's explicit approval.**
 
-- Android
+## Upstream attribution
 
-  1. **Path:** android/app/src/main/AndroidManifest.xml
-  2. **Change app name:** android:label="***********"
-
-- iOS
-
-  1. Go to the general tab and identity change the display name to your app name
-
-### For Splash Screen
-
-- For adding an Image as a Splash Screen
-
-  1. **Path:** assets/images/splash.png
-  2. No additional constant update is required. The splash image is loaded directly in `lib/features/splash/presentation/splash_screen.dart`.
-
-### For App Icon
-
-- **Android:** Open the android folder in Android Studio and then right click app > new > Image Asset set Image.
-- **iOS:** Replace the icons over the path > ios/Runner/Assets.xcassets/AppIcon.appiconset
-
-## Installation Video
-
-[![Watch the video](Docs/features_images/installation_configuration_video_thumbnail.jpg)](https://www.youtube.com/watch?v=EbXpRK6teCY)
-
-## API Documentation
-
-For the API Documentation, please go through - <https://api-docs.bagisto.com/api/graphql-api/introduction.html>
-
-## Usage
-
-For detailed usage instructions, refer to the official documentation
-
-## Contributing
-
-Contributions are welcome! Follow the contribution guidelines to get started.
-
-## License
-
-Bagisto is open-sourced software licensed under the MIT license.
+This project reuses and adapts the MIT-licensed [Bagisto Open Source eCommerce Mobile App](https://github.com/bagisto/opensource-ecommerce-mobile-app). The upstream code and its license notices are retained in the repository. ArtBook-specific backend, data model, workflows and UI are being developed on the `agent` branch.
