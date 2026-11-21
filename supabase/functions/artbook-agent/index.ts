@@ -77,11 +77,16 @@ async function callModel(input: {
   language: string;
   imageUrls: string[];
 }) {
-  const configuredBaseUrl = Deno.env.get("ARTBOOK_LLM_BASE_URL")?.trim();
+  // Free OpenRouter defaults for the ArtBook MVP. Both can be overridden
+  // through server-side secrets later without changing Flutter or this function.
+  const configuredBaseUrl = Deno.env.get("ARTBOOK_LLM_BASE_URL")?.trim()
+    || "https://openrouter.ai/api/v1";
   const apiKey = Deno.env.get("ARTBOOK_LLM_API_KEY")?.trim();
-  const model = Deno.env.get("ARTBOOK_LLM_MODEL")?.trim();
+  const model = Deno.env.get("ARTBOOK_LLM_MODEL")?.trim()
+    || "google/gemma-4-26b-a4b-it:free";
 
-  if (!configuredBaseUrl || !apiKey || !model) {
+  // Only the private provider key is mandatory for the default free setup.
+  if (!apiKey) {
     throw new Error("ARTBOOK_AI_PROVIDER_NOT_CONFIGURED");
   }
 
