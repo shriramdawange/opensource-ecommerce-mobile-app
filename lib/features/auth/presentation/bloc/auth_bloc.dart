@@ -292,7 +292,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
       } else {
         emit(
           const AuthRegistrationSuccess(
-            message: 'Account created successfully! Please login.',
+            message: 'Account created. Check your email to confirm your address, then sign in.',
           ),
         );
       }
