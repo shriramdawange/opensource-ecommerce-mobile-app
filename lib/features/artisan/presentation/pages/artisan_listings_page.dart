@@ -457,6 +457,7 @@ class _CreateArtisanProductPageState extends State<CreateArtisanProductPage> {
             price: double.parse(_price.text.trim()),
             availableQuantity: int.parse(_quantity.text.trim()),
             minimumOrderQuantity: int.parse(_minimumOrder.text.trim()),
+            floorPrice: floorPrice,
           );
           _createdDraftId = draft['id'].toString();
         }
