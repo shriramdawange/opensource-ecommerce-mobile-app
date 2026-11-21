@@ -18,7 +18,7 @@ class DeviceTokenService {
         _tokenGeneratedAtKey,
         DateTime.now().toIso8601String(),
       );
-      log('💾 Device token saved: ${token.substring(0, 20)}...');
+      log('Device notification token saved.');
     } catch (e) {
       debugPrint('❌ Failed to save device token: $e');
     }
@@ -30,7 +30,7 @@ class DeviceTokenService {
       final prefs = await SharedPreferences.getInstance();
       final token = prefs.getString(_deviceTokenKey);
       if (token != null) {
-        debugPrint('📦 Device token retrieved: ${token.substring(0, 20)}...');
+        debugPrint('Device notification token retrieved.');
       }
       return token;
     } catch (e) {
