@@ -60,12 +60,12 @@ dependencies:
   shared_preferences: ^2.3.5
   provider: ^6.1.4
   flutter_svg: ^2.2.3
-  share_plus: ^13.0.0
+  share_plus: ^10.0.0
   url_launcher: ^6.2.0
   flutter_inappwebview: ^6.1.5
   speech_to_text: ^7.0.0
   open_filex: ^4.6.0
-  device_info_plus: ^13.3.0
+  device_info_plus: ^11.1.0
   dio: ^5.4.1
 
   # ArtBook backend (Supabase Auth, Postgres, Storage, Edge Functions)
@@ -93,12 +93,12 @@ dependencies:
 
   # App Version Update
   in_app_update: ^4.2.5
-  upgrader: ^13.1.0
-  package_info_plus: ^10.0.0
+  upgrader: ^11.3.0
+  package_info_plus: ^8.1.0
 
   # Image Zoom & Fullscreen
   photo_view: ^0.15.0
-  file_picker: ^13.4.1
+  file_picker: ^11.0.2
   video_player: ^2.14.0
 
 dev_dependencies:
