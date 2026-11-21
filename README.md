@@ -62,18 +62,21 @@ The current development project URL and publishable key are configured as public
 
 ## AI provider configuration
 
-ArtBook's listing agent uses OpenRouter's OpenAI-compatible Chat Completions API. The recommended low-cost multimodal model is `meta/muse-ember`.
+ArtBook's listing agent defaults to OpenRouter's **free Google Gemma 4 26B A4B** model:
 
-Set these as **Supabase Edge Function secrets** (never in Flutter or GitHub):
+- Model: `google/gemma-4-26b-a4b-it:free`
+- Base URL: `https://openrouter.ai/api/v1`
+- Token price: $0 input / $0 output for the free variant
 
-- `ARTBOOK_LLM_BASE_URL=https://openrouter.ai/api/v1`
-- `ARTBOOK_LLM_API_KEY=<your OpenRouter key>`
-- `ARTBOOK_LLM_MODEL=meta/muse-ember`
+The only required Supabase Edge Function secret is:
 
-See [ArtBook Supabase Setup](Docs/ARTBOOK_SUPABASE_SETUP.md) for secure setup. The OpenRouter key must be kept in Supabase only. Until all three secrets are present, manual product draft creation works, but the voice/photo-to-AI-listing action returns a clear provider-not-configured response.
+- `ARTBOOK_LLM_API_KEY=<your private OpenRouter key>`
 
-The agent is instructed to avoid inventing an artisan's identity, craft origin, materials, technique, heritage or provenance. Generated information remains a draft until the artisan reviews it.
+The base URL and model are defaults in the deployed Edge Function; `ARTBOOK_LLM_BASE_URL` and `ARTBOOK_LLM_MODEL` are optional server-side overrides. See [ArtBook Supabase Setup](Docs/ARTBOOK_SUPABASE_SETUP.md).
 
+Free-tier limits currently include 50 requests/day and 20 requests/minute; check OpenRouter's current limits before relying on this for a live pilot. Never put the OpenRouter key in Flutter, GitHub, or a committed `.env` file.
+
+The agent keeps generated listings as drafts for artisan review and must not invent artisan identity, craft origin, materials, technique, heritage or provenance.
 ## Edge Functions
 
 All deployed functions require a valid Supabase JWT:
