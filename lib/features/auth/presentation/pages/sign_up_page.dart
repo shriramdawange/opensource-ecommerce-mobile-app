@@ -1,13 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:flutter_svg/flutter_svg.dart';
-import '../../../../core/widgets/channel_logo.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/widgets/app_back_button.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../bloc/auth_bloc.dart';
 import 'login_page.dart';
-import '../../../../core/store_config/store_config.dart';
 import '../auth_redirect.dart';
 
 /// Sign Up page for new customers
@@ -15,7 +12,7 @@ import '../auth_redirect.dart';
 ///
 /// Layout:
 ///   ─ AppBar with back arrow
-///   ─ Bagisto logo + wordmark
+///   ─ ArtBook logo + wordmark
 ///   ─ "Create Account" heading (Text-2)
 ///   ─ First Name, Last Name, Email, Password, Confirm Password fields
 ///   ─ [Sign Up] primary button (full width)
@@ -57,10 +54,7 @@ class _SignUpPageState extends State<SignUpPage> {
           email: _emailController.text.trim(),
           password: _passwordController.text,
           confirmPassword: _confirmPasswordController.text,
-          subscribeToNewsletter: StoreConfig.of(
-            context,
-            listen: false,
-          ).showNewsletter,
+          subscribeToNewsletter: false,
         ),
       );
     }
@@ -412,14 +406,25 @@ class _SignUpPageState extends State<SignUpPage> {
   }
 
   Widget _buildLogo(bool isDark) {
-    return Center(
-      child: ChannelLogo(
-        height: 60,
-        fallback: SvgPicture.asset(
-          'assets/images/bagisto_logo.svg',
-          height: 60,
-          width: 60,
-        ),
+    return const Center(
+      child: Column(
+        children: [
+          CircleAvatar(
+            radius: 27,
+            backgroundColor: Color(0xFF6F3E2B),
+            child: Icon(Icons.auto_awesome, color: Color(0xFFFFE8C9), size: 27),
+          ),
+          SizedBox(height: 9),
+          Text(
+            'ARTBOOK',
+            style: TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.w900,
+              letterSpacing: 2.4,
+              color: Color(0xFF6F3E2B),
+            ),
+          ),
+        ],
       ),
     );
   }
