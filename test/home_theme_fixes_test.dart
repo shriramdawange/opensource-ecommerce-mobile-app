@@ -14,7 +14,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 // Explicit legacy Bagisto URL for URL-resolution tests only.
 const String _testBagistoPublicBaseUrl =
-    'http://192.168.15.239/Bagisto-Api/new-setup/public';
+    'http://192.168.15.239/Bagisto-Api/new-setup/public/';
 
 /// Client whose response comes from [respond]; records every request body.
 GraphQLClient _client(
