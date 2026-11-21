@@ -66,6 +66,59 @@ class ArtBookAgentRepository {
     return matches.map((item) => Map<String, dynamic>.from(item as Map)).toList();
   }
 
+
+  Future<Map<String, dynamic>> saveListingDraft({
+    required String caseId,
+    required String title,
+    required String description,
+    required String craftStory,
+    required String craftOrigin,
+    required String categoryId,
+    required double price,
+    double? floorPrice,
+    required int availableQuantity,
+    required int minimumOrderQuantity,
+    List<String> materials = const [],
+    List<String> techniques = const [],
+    List<String> mediaPaths = const [],
+  }) async {
+    _userId;
+    final response = await client.functions.invoke('save-listing-draft', body: {
+      'case_id': caseId,
+      'title': title,
+      'description': description,
+      'craft_story': craftStory,
+      'craft_origin': craftOrigin,
+      'category_id': categoryId,
+      'price': price,
+      'floor_price': floorPrice,
+      'available_quantity': availableQuantity,
+      'min_order_quantity': minimumOrderQuantity,
+      'materials': materials,
+      'techniques': techniques,
+      'media_paths': mediaPaths,
+    });
+    if (response.status < 200 || response.status >= 300) {
+      final details = response.data is Map ? response.data['error'] : null;
+      throw AuthException(details?.toString() ?? 'The listing draft could not be saved.');
+    }
+    return Map<String, dynamic>.from(response.data as Map);
+  }
+
+  Future<Map<String, dynamic>> requestListingPublication({
+    required String productId,
+  }) async {
+    _userId;
+    final response = await client.functions.invoke('request-listing-publication', body: {
+      'product_id': productId,
+    });
+    if (response.status < 200 || response.status >= 300) {
+      final details = response.data is Map ? response.data['error'] : null;
+      throw AuthException(details?.toString() ?? 'Publication request could not be created.');
+    }
+    return Map<String, dynamic>.from(response.data as Map);
+  }
+
   Future<Map<String, dynamic>> decideApproval({
     required String approvalId,
     required bool approve,
