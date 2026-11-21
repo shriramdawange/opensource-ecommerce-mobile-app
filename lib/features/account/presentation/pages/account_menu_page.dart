@@ -32,6 +32,7 @@ import '../widgets/account_menu_item.dart';
 import '../../../../core/widgets/app_back_button.dart';
 import '../../../../core/store_config/store_config.dart';
 import '../../../artisan/presentation/pages/artisan_onboarding_page.dart';
+import '../../../artisan/presentation/pages/artisan_listings_page.dart';
 
 /// Account Menu Page — Figma node-id=220-6770
 ///
@@ -274,6 +275,18 @@ class _AccountMenuBody extends StatelessWidget {
               Navigator.of(context).push(
                 MaterialPageRoute(
                   builder: (_) => const ArtisanOnboardingPage(),
+                ),
+              );
+            },
+          ),
+          const SizedBox(height: 2),
+          AccountMenuItem(
+            label: 'My ArtBook Listings',
+            trailingIcon: Icons.inventory_2_outlined,
+            onTap: () {
+              Navigator.of(context).push(
+                MaterialPageRoute(
+                  builder: (_) => const ArtisanListingsPage(),
                 ),
               );
             },
