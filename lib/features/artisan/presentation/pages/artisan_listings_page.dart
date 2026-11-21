@@ -68,7 +68,7 @@ class _ArtisanListingsPageState extends State<ArtisanListingsPage> {
       final range = result['price_range'];
       final hasRange = range is Map;
       final body = hasRange
-          ? 'Indicative range: \${range['currency'] ?? 'INR'} \${range['min']} – \${range['max']} per \${range['unit'] ?? 'piece'}\\n\\nBased on \${result['comparable_count'] ?? 0} verified observations. Confidence: \${result['confidence'] ?? 'not available'}.'
+          ? 'Indicative range: ${range['currency'] ?? 'INR'} ${range['min']} – ${range['max']} per ${range['unit'] ?? 'piece'}\\n\\nBased on ${result['comparable_count'] ?? 0} verified observations. Confidence: ${result['confidence'] ?? 'not available'}.'
           : (result['message']?.toString() ??
               'There is not enough verified comparable market data to suggest a price.');
 
@@ -131,7 +131,7 @@ class _ArtisanListingsPageState extends State<ArtisanListingsPage> {
                           ),
                           const SizedBox(height: 3),
                           Text(
-                            '\${score.toStringAsFixed(0)}% match · Qty \${match['quantity'] ?? 1}',
+                            '${score.toStringAsFixed(0)}% match · Qty ${match['quantity'] ?? 1}',
                             style: const TextStyle(color: Color(0xFF8B735F), fontSize: 12),
                           ),
                           if ((match['description'] ?? '').toString().isNotEmpty)
