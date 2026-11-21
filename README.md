@@ -62,13 +62,15 @@ The current development project URL and publishable key are configured as public
 
 ## AI provider configuration
 
-The listing agent uses an OpenAI-compatible chat-completions endpoint. Configure these values as **Supabase Edge Function secrets**, not in the Flutter app:
+ArtBook's listing agent uses OpenRouter's OpenAI-compatible Chat Completions API. The recommended low-cost multimodal model is `meta/muse-ember`.
 
-- `ARTBOOK_LLM_BASE_URL`
-- `ARTBOOK_LLM_API_KEY`
-- `ARTBOOK_LLM_MODEL`
+Set these as **Supabase Edge Function secrets** (never in Flutter or GitHub):
 
-Until an AI provider is configured, manual product draft creation works, but the voice/photo-to-AI-listing action returns a clear provider-not-configured response.
+- `ARTBOOK_LLM_BASE_URL=https://openrouter.ai/api/v1`
+- `ARTBOOK_LLM_API_KEY=<your OpenRouter key>`
+- `ARTBOOK_LLM_MODEL=meta/muse-ember`
+
+See [ArtBook Supabase Setup](Docs/ARTBOOK_SUPABASE_SETUP.md) for secure setup. The OpenRouter key must be kept in Supabase only. Until all three secrets are present, manual product draft creation works, but the voice/photo-to-AI-listing action returns a clear provider-not-configured response.
 
 The agent is instructed to avoid inventing an artisan's identity, craft origin, materials, technique, heritage or provenance. Generated information remains a draft until the artisan reviews it.
 
