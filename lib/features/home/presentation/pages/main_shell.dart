@@ -1,90 +1,55 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
+
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/navigation/app_navigator.dart';
 import '../../../../l10n/app_localizations.dart';
-import '../../../category/presentation/pages/category_page.dart';
-import '../../../cart/presentation/pages/cart_page.dart';
-import '../../../cart/presentation/bloc/cart_bloc.dart';
-import '../../../auth/presentation/pages/account_page.dart';
-import '../helpers/main_shell_navigation_helpers.dart';
-import 'home_page.dart';
-import '../../../../core/store_config/store_config.dart';
+import '../../../marketplace/presentation/pages/artbook_marketplace_page.dart';
+import '../../../commerce/presentation/pages/artbook_cart_page.dart';
+import '../../../account/presentation/pages/artbook_account_page.dart';
 
-/// Main Shell with bottom navigation bar — modern e-commerce navigation.
+/// ArtBook's Supabase-backed application shell.
 ///
-/// Features:
-///   • IndexedStack keeps all tabs alive (no rebuild on switch)
-///   • AppNavigator InheritedWidget lets any child switch tabs
-///   • Tab history stack: back button returns to the previous tab
-///   • Android back button: previous tab → then exit
-///   • Cart badge auto-updates from CartBloc
-///
-/// Tabs: Home(0) | Categories(1) | Cart(2) | Account(3)
+/// The legacy Bagisto screens remain in the repository for reference while
+/// their features are migrated. The active tabs now use ArtBook repositories.
 class MainShell extends StatefulWidget {
   const MainShell({super.key});
 
-  /// GlobalKey for accessing MainShellState from anywhere in the app
-  static final GlobalKey<MainShellState> navigatorKey = GlobalKey<MainShellState>();
+  static final GlobalKey<MainShellState> navigatorKey =
+      GlobalKey<MainShellState>();
 
   @override
   State<MainShell> createState() => MainShellState();
 }
 
 class MainShellState extends State<MainShell> {
-  int _currentIndex = 0; // Start on Home
-
-  /// Tab history stack for proper back navigation.
-  /// Stores the history of visited tabs so pressing back goes to the
-  /// previous tab before exiting.
-  final List<int> _tabHistory = [0]; // initial tab
+  int _currentIndex = 0;
+  final List<int> _tabHistory = [0];
 
   void switchToTab(int index) {
-    final action = resolveMainShellTabRequest(
-      currentIndex: _currentIndex,
-      requestedIndex: index,
-      cartPageEnabled: StoreConfig.of(context, listen: false).showCartPage,
-    );
+    if (index < 0 || index > 3 || index == _currentIndex) return;
 
-    if (action.shouldSwitchTabs) {
-      setState(() {
-        // Push current tab to history before switching
-        if (_tabHistory.isEmpty || _tabHistory.last != _currentIndex) {
-          _tabHistory.add(_currentIndex);
-        }
-        _currentIndex = index;
-      });
-    }
-
-    if (action.shouldReloadCart) {
-      context.read<CartBloc>().add(LoadCart());
-    }
+    setState(() {
+      if (_tabHistory.isEmpty || _tabHistory.last != _currentIndex) {
+        _tabHistory.add(_currentIndex);
+      }
+      _currentIndex = index;
+    });
   }
 
   int get currentTab => _currentIndex;
 
-  /// Handle Android/iOS back button: go to previous tab, then exit
   Future<bool> _onWillPop() async {
-    // Skip the cart tab in history when the cart page is disabled.
-    if (!StoreConfig.of(context, listen: false).showCartPage) {
-      _tabHistory.removeWhere((tab) => tab == AppNavigator.cartTab);
-    }
     if (_tabHistory.isNotEmpty) {
       final previousTab = _tabHistory.removeLast();
       setState(() => _currentIndex = previousTab);
-      return false; // Don't exit app
+      return false;
     }
-    return true; // Exit app
+    return true;
   }
 
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final showCartPage = StoreConfig.of(context).showCartPage;
-    // Cart page switched off while on the cart tab: show Home instead.
-    final visibleIndex = !showCartPage && _currentIndex == AppNavigator.cartTab
-        ? AppNavigator.homeTab
-        : _currentIndex;
 
     // ignore: deprecated_member_use
     return WillPopScope(
@@ -94,12 +59,12 @@ class MainShellState extends State<MainShell> {
         currentTab: () => _currentIndex,
         child: Scaffold(
           body: IndexedStack(
-            index: visibleIndex,
-            children: [
-              const HomePage(),
-              const CategoryPage(),
-              const CartPage(),
-              AccountPage(isActive: _currentIndex == 3),
+            index: _currentIndex,
+            children: const [
+              ArtBookMarketplacePage(),
+              ArtBookMarketplacePage(),
+              ArtBookCartPage(),
+              ArtBookAccountPage(),
             ],
           ),
           bottomNavigationBar: _buildBottomNav(context, isDark),
@@ -139,16 +104,11 @@ class MainShellState extends State<MainShell> {
                 activeIcon: Icons.grid_view,
                 label: l10n.mainTabCategories,
               ),
-              if (StoreConfig.of(context).showCartPage)
-              _buildNavItemWithBadge(
+              _buildNavItem(
                 index: 2,
                 icon: Icons.shopping_cart_outlined,
                 activeIcon: Icons.shopping_cart,
                 label: l10n.mainTabCart,
-                badgeCount: StoreConfig.of(context).cartCount(
-                  itemsCount: context.watch<CartBloc>().state.cart.itemsCount,
-                  itemsQty: context.watch<CartBloc>().state.cart.itemsQty,
-                ),
               ),
               _buildNavItem(
                 index: 3,
@@ -208,81 +168,4 @@ class MainShellState extends State<MainShell> {
       ),
     );
   }
-
-  Widget _buildNavItemWithBadge({
-    required int index,
-    required IconData icon,
-    required IconData activeIcon,
-    required String label,
-    required int badgeCount,
-  }) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    final isActive = _currentIndex == index;
-
-    return GestureDetector(
-      onTap: () => switchToTab(index),
-      behavior: HitTestBehavior.opaque,
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Stack(
-              clipBehavior: Clip.none,
-              children: [
-                Icon(
-                  isActive ? activeIcon : icon,
-                  size: 24,
-                  color: isActive
-                      ? AppColors.primary500
-                      : isDark
-                          ? AppColors.neutral300
-                          : AppColors.neutral800,
-                ),
-                if (badgeCount > 0)
-                  Positioned(
-                    top: -4,
-                    right: -8,
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 4,
-                        vertical: 2,
-                      ),
-                      decoration: BoxDecoration(
-                        color: AppColors.primary500,
-                        borderRadius: BorderRadius.circular(4),
-                      ),
-                      child: Text(
-                        '$badgeCount',
-                        style: const TextStyle(
-                          fontFamily: 'Roboto',
-                          fontSize: 12,
-                          fontWeight: FontWeight.w400,
-                          color: AppColors.white,
-                        ),
-                      ),
-                    ),
-                  ),
-              ],
-            ),
-            const SizedBox(height: 2),
-            Text(
-              label,
-              style: TextStyle(
-                fontFamily: 'Roboto',
-                fontSize: 12,
-                fontWeight: FontWeight.w400,
-                color: isActive
-                    ? AppColors.primary500
-                    : isDark
-                        ? AppColors.neutral300
-                        : AppColors.neutral800,
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
 }
