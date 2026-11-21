@@ -65,7 +65,7 @@ dependencies:
   flutter_inappwebview: ^6.1.5
   speech_to_text: ^7.0.0
   open_filex: ^4.6.0
-  device_info_plus: ^11.1.0
+  device_info_plus: ^13.3.0
   dio: ^5.4.1
 
   # ArtBook backend (Supabase Auth, Postgres, Storage, Edge Functions)
