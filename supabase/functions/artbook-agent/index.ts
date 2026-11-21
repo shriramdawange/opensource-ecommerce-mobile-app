@@ -196,13 +196,14 @@ Deno.serve(async (req: Request) => {
     }
 
     const input = body.input ?? {};
-    const language = safeString(input.language, 16) || "en-IN";
-    const transcript = safeString(input.voice_transcript, 8000);
-    const artisanNotes = safeString(input.artisan_notes, 4000);
-    const mediaPaths = Array.isArray(input.media_paths)
+    let language = safeString(input.language, 16) || "en-IN";
+    let transcript = safeString(input.voice_transcript, 8000);
+    let artisanNotes = safeString(input.artisan_notes, 4000);
+    let mediaPaths = Array.isArray(input.media_paths)
       ? input.media_paths.filter((p: unknown) => typeof p === "string").slice(0, 4)
       : [];
     const idempotencyKey = safeString(body.idempotency_key, 100) || null;
+    let attempt = 1;
 
     if (!transcript && !artisanNotes && mediaPaths.length === 0) {
       return json({ error: "LISTING_INPUT_REQUIRED" }, 400);
@@ -211,49 +212,119 @@ Deno.serve(async (req: Request) => {
       return json({ error: "MEDIA_PATH_NOT_OWNED_BY_USER" }, 403);
     }
 
+    let existingCase: Record<string, unknown> | null = null;
     if (idempotencyKey) {
-      const { data: existing } = await admin
-        .from("agent_cases").select("id,status,current_step,context")
+      const { data: found, error: findError } = await admin
+        .from("agent_cases")
+        .select("id,status,current_step,context,input_payload,retry_count,next_retry_at")
         .eq("owner_user_id", user.id)
         .eq("idempotency_key", idempotencyKey)
         .maybeSingle();
-      if (existing) {
+      if (findError) throw findError;
+      existingCase = found as Record<string, unknown> | null;
+    }
+
+    if (existingCase) {
+      const existingStatus = String(existingCase.status ?? "");
+      const existingContext = (existingCase.context ?? {}) as Record<string, unknown>;
+      if (existingStatus === "awaiting_artisan_review" || existingStatus === "completed") {
         return json({
-          case_id: existing.id,
-          status: existing.status,
-          step: existing.current_step,
-          draft: existing.context?.listing_draft ?? null,
+          case_id: existingCase.id,
+          status: existingStatus,
+          step: existingCase.current_step,
+          draft: existingContext.listing_draft ?? null,
           idempotent_replay: true,
         });
       }
+      if (existingStatus === "running") {
+        return json({
+          case_id: existingCase.id,
+          status: "running",
+          step: existingCase.current_step,
+          message: "This agent case is already running. Check its status before starting another run.",
+        }, 202);
+      }
+      if (existingStatus !== "failed") {
+        return json({
+          error: "AGENT_CASE_NOT_RESUMABLE",
+          case_id: existingCase.id,
+          status: existingStatus,
+        }, 409);
+      }
+
+      const previousAttempts = Number(existingCase.retry_count ?? 0);
+      if (previousAttempts >= 3) {
+        return json({
+          error: "AGENT_RETRY_LIMIT_REACHED",
+          case_id: existingCase.id,
+          status: "failed",
+          message: "This case reached its automatic retry limit. Start a new listing case or contact support.",
+        }, 409);
+      }
+
+      const nextRetryAt = existingCase.next_retry_at
+        ? Date.parse(String(existingCase.next_retry_at))
+        : 0;
+      if (Number.isFinite(nextRetryAt) && nextRetryAt > Date.now()) {
+        return json({
+          error: "AGENT_RETRY_BACKOFF",
+          case_id: existingCase.id,
+          status: "failed",
+          retry_after: new Date(nextRetryAt).toISOString(),
+          message: "This case is saved and can be retried after the short recovery interval.",
+        }, 429);
+      }
+
+      const savedInput = (existingCase.input_payload ?? {}) as Record<string, unknown>;
+      language = safeString(savedInput.language, 16) || language;
+      transcript = safeString(savedInput.transcript, 8000) || transcript;
+      artisanNotes = safeString(savedInput.artisan_notes, 4000) || artisanNotes;
+      mediaPaths = Array.isArray(savedInput.media_paths)
+        ? savedInput.media_paths.filter((path: unknown) => typeof path === "string").slice(0, 4)
+        : mediaPaths;
+
+      attempt = previousAttempts + 1;
+      caseId = String(existingCase.id);
+
+      const { error: resumeError } = await admin
+        .from("agent_cases")
+        .update({
+          status: "running",
+          current_step: "understand_craft",
+          next_retry_at: null,
+          last_error_code: null,
+        })
+        .eq("id", caseId)
+        .eq("owner_user_id", user.id);
+      if (resumeError) throw resumeError;
+    } else {
+      const { data: artisan } = await admin
+        .from("artisan_profiles").select("id")
+        .eq("user_id", user.id).maybeSingle();
+
+      const { data: createdCase, error: caseError } = await admin
+        .from("agent_cases")
+        .insert({
+          owner_user_id: user.id,
+          artisan_profile_id: artisan?.id ?? null,
+          case_type: "listing_creation",
+          status: "running",
+          current_step: "understand_craft",
+          input_payload: {
+            language,
+            transcript,
+            artisan_notes: artisanNotes,
+            media_paths: mediaPaths,
+          },
+          context: { language, transcript, artisan_notes: artisanNotes, media_paths: mediaPaths },
+          retry_count: 0,
+          idempotency_key: idempotencyKey,
+        })
+        .select("id").single();
+
+      if (caseError || !createdCase) throw caseError ?? new Error("CASE_CREATE_FAILED");
+      caseId = createdCase.id;
     }
-
-    const { data: artisan } = await admin
-      .from("artisan_profiles").select("id")
-      .eq("user_id", user.id).maybeSingle();
-
-    const { data: createdCase, error: caseError } = await admin
-      .from("agent_cases")
-      .insert({
-        owner_user_id: user.id,
-        artisan_profile_id: artisan?.id ?? null,
-        case_type: "listing_creation",
-        status: "running",
-        current_step: "understand_craft",
-        input_payload: {
-          language,
-          transcript,
-          artisan_notes: artisanNotes,
-          media_paths: mediaPaths,
-        },
-        context: { language, transcript, artisan_notes: artisanNotes, media_paths: mediaPaths },
-        retry_count: 0,
-        idempotency_key: idempotencyKey,
-      })
-      .select("id").single();
-
-    if (caseError || !createdCase) throw caseError ?? new Error("CASE_CREATE_FAILED");
-    caseId = createdCase.id;
 
     const { data: step, error: stepError } = await admin
       .from("agent_case_steps")
@@ -261,7 +332,7 @@ Deno.serve(async (req: Request) => {
         case_id: caseId,
         step_key: "understand_craft",
         status: "running",
-        attempt: 1,
+        attempt,
         input_payload: { language, transcript, artisan_notes: artisanNotes, media_paths: mediaPaths },
         started_at: new Date().toISOString(),
       })
@@ -324,9 +395,11 @@ Deno.serve(async (req: Request) => {
       await admin.from("agent_cases").update({
         status: "failed",
         current_step: "understand_craft",
-        retry_count: 1,
+        retry_count: attempt,
         last_error_code: message,
-        next_retry_at: new Date(Date.now() + 60000).toISOString(),
+        next_retry_at: new Date(
+          Date.now() + Math.min(4, 2 ** (attempt - 1)) * 60000,
+        ).toISOString(),
       }).eq("id", caseId);
 
       const status = message === "ARTBOOK_AI_PROVIDER_NOT_CONFIGURED" ? 503 : 502;
