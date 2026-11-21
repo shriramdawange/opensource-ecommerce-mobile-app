@@ -34,8 +34,8 @@ The database schema and Edge Function source are in `supabase/`. Supabase client
 
 ### Requirements
 
-- Flutter 3.38.9 (see upstream compatibility notes)
-- Dart 3.10.8 or compatible SDK from the Flutter release
+- Flutter 3.50.1 (stable)
+- Dart 3.14.0 or compatible SDK from the Flutter release
 - Android Studio / Android SDK for Android development
 - Xcode on macOS for iOS development
 
