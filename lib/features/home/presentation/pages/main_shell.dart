@@ -9,14 +9,10 @@ import '../../../commerce/presentation/pages/artbook_cart_page.dart';
 import '../../../account/presentation/pages/artbook_account_page.dart';
 
 /// ArtBook's Supabase-backed application shell.
-///
-/// The legacy Bagisto screens remain in the repository for reference while
-/// their features are migrated. The active tabs now use ArtBook repositories.
 class MainShell extends StatefulWidget {
   const MainShell({super.key});
 
-  static final GlobalKey<MainShellState> navigatorKey =
-      GlobalKey<MainShellState>();
+  static final GlobalKey<MainShellState> navigatorKey = GlobalKey<MainShellState>();
 
   @override
   State<MainShell> createState() => MainShellState();
@@ -26,13 +22,12 @@ class MainShellState extends State<MainShell> {
   int _currentIndex = 0;
   final List<int> _tabHistory = [0];
 
+  static const _clay = Color(0xFF9A4F36);
+
   void switchToTab(int index) {
     if (index < 0 || index > 3 || index == _currentIndex) return;
-
     setState(() {
-      if (_tabHistory.isEmpty || _tabHistory.last != _currentIndex) {
-        _tabHistory.add(_currentIndex);
-      }
+      if (_tabHistory.isEmpty || _tabHistory.last != _currentIndex) _tabHistory.add(_currentIndex);
       _currentIndex = index;
     });
   }
@@ -50,8 +45,6 @@ class MainShellState extends State<MainShell> {
 
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-
     // ignore: deprecated_member_use
     return WillPopScope(
       onWillPop: _onWillPop,
@@ -68,103 +61,66 @@ class MainShellState extends State<MainShell> {
               ArtBookAccountPage(),
             ],
           ),
-          bottomNavigationBar: _buildBottomNav(context, isDark),
+          bottomNavigationBar: _buildBottomNav(context),
         ),
       ),
     );
   }
 
-  Widget _buildBottomNav(BuildContext context, bool isDark) {
+  Widget _buildBottomNav(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     final l10n = AppLocalizations.of(context)!;
+    final surface = isDark ? AppColors.neutral800 : Colors.white;
+    final inactive = isDark ? Colors.white60 : const Color(0xFF898176);
+    final items = [
+      (Icons.storefront_outlined, Icons.storefront_rounded, l10n.mainTabHome),
+      (Icons.grid_view_outlined, Icons.grid_view_rounded, l10n.mainTabCategories),
+      (Icons.shopping_bag_outlined, Icons.shopping_bag_rounded, l10n.mainTabCart),
+      (Icons.person_outline_rounded, Icons.person_rounded, l10n.mainTabAccount),
+    ];
 
     return Container(
       decoration: BoxDecoration(
-        color: isDark ? AppColors.neutral800 : AppColors.neutral50,
-        border: Border(
-          top: BorderSide(
-            color: isDark ? Colors.transparent : AppColors.neutral100,
-            width: 1,
-          ),
-        ),
+        color: surface,
+        border: Border(top: BorderSide(color: isDark ? AppColors.neutral700 : const Color(0xFFECE5DA))),
+        boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: isDark ? 0 : .045), blurRadius: 18, offset: const Offset(0, -5))],
       ),
       child: SafeArea(
+        top: false,
         child: Padding(
-          padding: const EdgeInsets.symmetric(vertical: 4),
+          padding: const EdgeInsets.fromLTRB(9, 8, 9, 5),
           child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceAround,
-            children: [
-              _buildNavItem(
-                index: 0,
-                icon: Icons.home_outlined,
-                activeIcon: Icons.home,
-                label: l10n.mainTabHome,
-              ),
-              _buildNavItem(
-                index: 1,
-                icon: Icons.grid_view_outlined,
-                activeIcon: Icons.grid_view,
-                label: l10n.mainTabCategories,
-              ),
-              _buildNavItem(
-                index: 2,
-                icon: Icons.shopping_cart_outlined,
-                activeIcon: Icons.shopping_cart,
-                label: l10n.mainTabCart,
-              ),
-              _buildNavItem(
-                index: 3,
-                icon: Icons.person_outline,
-                activeIcon: Icons.person,
-                label: l10n.mainTabAccount,
-              ),
-            ],
+            children: List.generate(items.length, (index) {
+              final active = _currentIndex == index;
+              final item = items[index];
+              return Expanded(
+                child: Semantics(
+                  button: true,
+                  selected: active,
+                  label: item.$3,
+                  child: InkWell(
+                    borderRadius: BorderRadius.circular(16),
+                    onTap: () => switchToTab(index),
+                    child: AnimatedContainer(
+                      duration: const Duration(milliseconds: 180),
+                      curve: Curves.easeOut,
+                      margin: const EdgeInsets.symmetric(horizontal: 3),
+                      padding: const EdgeInsets.symmetric(vertical: 7),
+                      decoration: BoxDecoration(
+                        color: active ? _clay.withValues(alpha: .10) : Colors.transparent,
+                        borderRadius: BorderRadius.circular(15),
+                      ),
+                      child: Column(mainAxisSize: MainAxisSize.min, children: [
+                        Icon(active ? item.$2 : item.$1, size: 22, color: active ? _clay : inactive),
+                        const SizedBox(height: 3),
+                        Text(item.$3, maxLines: 1, overflow: TextOverflow.ellipsis, style: TextStyle(fontSize: 10, fontWeight: active ? FontWeight.w800 : FontWeight.w500, color: active ? _clay : inactive)),
+                      ]),
+                    ),
+                  ),
+                ),
+              );
+            }),
           ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildNavItem({
-    required int index,
-    required IconData icon,
-    required IconData activeIcon,
-    required String label,
-  }) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    final isActive = _currentIndex == index;
-
-    return GestureDetector(
-      onTap: () => switchToTab(index),
-      behavior: HitTestBehavior.opaque,
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(
-              isActive ? activeIcon : icon,
-              size: 24,
-              color: isActive
-                  ? AppColors.primary500
-                  : isDark
-                      ? AppColors.neutral300
-                      : AppColors.neutral800,
-            ),
-            const SizedBox(height: 2),
-            Text(
-              label,
-              style: TextStyle(
-                fontFamily: 'Roboto',
-                fontSize: 12,
-                fontWeight: FontWeight.w400,
-                color: isActive
-                    ? AppColors.primary500
-                    : isDark
-                        ? AppColors.neutral300
-                        : AppColors.neutral800,
-              ),
-            ),
-          ],
         ),
       ),
     );
