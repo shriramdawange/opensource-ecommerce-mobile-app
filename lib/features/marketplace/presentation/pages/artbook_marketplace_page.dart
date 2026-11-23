@@ -7,7 +7,6 @@ import 'artbook_product_detail_page.dart';
 
 class ArtBookMarketplacePage extends StatefulWidget {
   final String? initialCategoryId;
-
   const ArtBookMarketplacePage({super.key, this.initialCategoryId});
 
   @override
@@ -22,6 +21,12 @@ class _ArtBookMarketplacePageState extends State<ArtBookMarketplacePage> {
   String? _selectedCategory;
   bool _loading = true;
   String? _error;
+
+  static const _ink = Color(0xFF28251F);
+  static const _muted = Color(0xFF81796E);
+  static const _paper = Color(0xFFFAF7F1);
+  static const _clay = Color(0xFF9A4F36);
+  static const _line = Color(0xFFECE5DA);
 
   @override
   void initState() {
@@ -62,80 +67,71 @@ class _ArtBookMarketplacePageState extends State<ArtBookMarketplacePage> {
     }
   }
 
-  Future<void> _search() => _load();
-
   String? _primaryImage(Map<String, dynamic> product) {
     final media = product['product_media'];
     if (media is! List || media.isEmpty) return null;
     final ordered = [...media]..sort((a, b) {
-      final aPrimary = a is Map && a['is_primary'] == true ? 0 : 1;
-      final bPrimary = b is Map && b['is_primary'] == true ? 0 : 1;
-      return aPrimary.compareTo(bPrimary);
+      final ap = a is Map && a['is_primary'] == true ? 0 : 1;
+      final bp = b is Map && b['is_primary'] == true ? 0 : 1;
+      return ap.compareTo(bp);
     });
     final first = ordered.first;
     if (first is! Map || first['storage_path'] == null) return null;
     final bucket = first['storage_bucket']?.toString() ?? 'artbook-product-media';
-    return ArtBookSupabase.client.storage
-        .from(bucket)
-        .getPublicUrl(first['storage_path'].toString());
+    return ArtBookSupabase.client.storage.from(bucket).getPublicUrl(first['storage_path'].toString());
   }
 
   void _openProduct(Map<String, dynamic> product) {
-    Navigator.of(context).push(
-      MaterialPageRoute(
-        builder: (_) => ArtBookProductDetailPage(product: product),
-      ),
-    );
+    Navigator.of(context).push(MaterialPageRoute(
+      builder: (_) => ArtBookProductDetailPage(product: product),
+    ));
   }
 
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    final background = isDark ? AppColors.neutral900 : _paper;
+    final card = isDark ? AppColors.neutral800 : Colors.white;
+    final text = isDark ? Colors.white : _ink;
+
     return Scaffold(
-      backgroundColor: isDark ? AppColors.neutral900 : const Color(0xFFFAF7F1),
+      backgroundColor: background,
       body: SafeArea(
         child: RefreshIndicator(
+          color: _clay,
           onRefresh: _load,
           child: CustomScrollView(
+            physics: const AlwaysScrollableScrollPhysics(),
             slivers: [
               SliverToBoxAdapter(
                 child: Padding(
-                  padding: const EdgeInsets.fromLTRB(18, 14, 18, 8),
+                  padding: const EdgeInsets.fromLTRB(20, 16, 20, 14),
                   child: Row(
                     children: [
                       Container(
-                        width: 42,
-                        height: 42,
+                        width: 44,
+                        height: 44,
                         decoration: BoxDecoration(
-                          color: const Color(0xFF7B3F27),
-                          borderRadius: BorderRadius.circular(13),
+                          color: _clay,
+                          borderRadius: BorderRadius.circular(15),
                         ),
-                        child: const Icon(Icons.auto_awesome, color: Colors.white),
+                        child: const Icon(Icons.auto_awesome_rounded, color: Colors.white, size: 22),
                       ),
-                      const SizedBox(width: 10),
-                      const Expanded(
+                      const SizedBox(width: 11),
+                      Expanded(
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Text(
-                              'ARTBOOK',
-                              style: TextStyle(
-                                fontWeight: FontWeight.w900,
-                                letterSpacing: 1.4,
-                                fontSize: 17,
-                              ),
-                            ),
-                            Text(
-                              'Stories made by hand',
-                              style: TextStyle(fontSize: 11, color: Color(0xFF8B735F)),
-                            ),
+                            Text('ARTBOOK', style: TextStyle(color: text, fontSize: 17, fontWeight: FontWeight.w900, letterSpacing: 2.1)),
+                            const SizedBox(height: 2),
+                            const Text('A marketplace of makers & meaning', style: TextStyle(color: _muted, fontSize: 11, letterSpacing: .15)),
                           ],
                         ),
                       ),
                       IconButton(
-                        tooltip: 'Refresh marketplace',
+                        tooltip: 'Refresh',
                         onPressed: _load,
-                        icon: const Icon(Icons.refresh),
+                        icon: Icon(Icons.refresh_rounded, color: text),
                       ),
                     ],
                   ),
@@ -143,34 +139,37 @@ class _ArtBookMarketplacePageState extends State<ArtBookMarketplacePage> {
               ),
               SliverToBoxAdapter(
                 child: Padding(
-                  padding: const EdgeInsets.fromLTRB(18, 10, 18, 14),
+                  padding: const EdgeInsets.fromLTRB(18, 2, 18, 18),
                   child: Container(
-                    padding: const EdgeInsets.all(18),
+                    constraints: const BoxConstraints(minHeight: 194),
                     decoration: BoxDecoration(
-                      color: const Color(0xFF4B2B20),
-                      borderRadius: BorderRadius.circular(22),
-                      image: const DecorationImage(
-                        image: AssetImage('assets/images/splash.png'),
-                        fit: BoxFit.cover,
-                        opacity: 0.08,
+                      borderRadius: BorderRadius.circular(28),
+                      gradient: const LinearGradient(
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                        colors: [Color(0xFF633B2D), Color(0xFF9A4F36), Color(0xFFC17A50)],
                       ),
+                      boxShadow: [BoxShadow(color: _clay.withValues(alpha: .20), blurRadius: 22, offset: const Offset(0, 10))],
                     ),
-                    child: const Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
+                    child: Stack(
                       children: [
-                        Text(
-                          'Made by hands.\nCarrying a story.',
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontSize: 25,
-                            height: 1.12,
-                            fontWeight: FontWeight.w800,
+                        Positioned(right: -18, bottom: -32, child: Icon(Icons.spa_outlined, size: 190, color: Colors.white.withValues(alpha: .08))),
+                        Padding(
+                          padding: const EdgeInsets.fromLTRB(22, 23, 22, 22),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                                decoration: BoxDecoration(color: Colors.white.withValues(alpha: .14), borderRadius: BorderRadius.circular(30)),
+                                child: const Text('MADE SLOW. TREASURED FOREVER.', style: TextStyle(color: Color(0xFFFFE8D5), fontSize: 9, fontWeight: FontWeight.w800, letterSpacing: 1.2)),
+                              ),
+                              const SizedBox(height: 15),
+                              const Text('Every craft has\na story.', style: TextStyle(color: Colors.white, fontSize: 31, height: 1.08, fontWeight: FontWeight.w900, letterSpacing: -.7)),
+                              const SizedBox(height: 9),
+                              const Text('Meet the makers. Discover the hands, heritage and heart behind every creation.', style: TextStyle(color: Color(0xFFF4E5D9), fontSize: 12, height: 1.45)),
+                            ],
                           ),
-                        ),
-                        SizedBox(height: 9),
-                        Text(
-                          'Discover original crafts and meet the makers behind them.',
-                          style: TextStyle(color: Color(0xFFF2E6D9), fontSize: 13),
                         ),
                       ],
                     ),
@@ -179,23 +178,26 @@ class _ArtBookMarketplacePageState extends State<ArtBookMarketplacePage> {
               ),
               SliverToBoxAdapter(
                 child: Padding(
-                  padding: const EdgeInsets.fromLTRB(18, 0, 18, 12),
-                  child: TextField(
-                    controller: _searchController,
-                    textInputAction: TextInputAction.search,
-                    onSubmitted: (_) => _search(),
-                    decoration: InputDecoration(
-                      hintText: 'Search crafts, materials or makers',
-                      prefixIcon: const Icon(Icons.search),
-                      suffixIcon: IconButton(
-                        onPressed: _search,
-                        icon: const Icon(Icons.arrow_forward),
-                      ),
-                      filled: true,
-                      fillColor: isDark ? AppColors.neutral800 : Colors.white,
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(15),
-                        borderSide: BorderSide.none,
+                  padding: const EdgeInsets.fromLTRB(18, 0, 18, 16),
+                  child: Container(
+                    decoration: BoxDecoration(
+                      color: card,
+                      borderRadius: BorderRadius.circular(17),
+                      border: Border.all(color: isDark ? AppColors.neutral700 : _line),
+                      boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: isDark ? 0 : .035), blurRadius: 14, offset: const Offset(0, 5))],
+                    ),
+                    child: TextField(
+                      controller: _searchController,
+                      textInputAction: TextInputAction.search,
+                      onSubmitted: (_) => _load(),
+                      style: TextStyle(color: text, fontSize: 14),
+                      decoration: InputDecoration(
+                        hintText: 'Search crafts, materials or makers',
+                        hintStyle: const TextStyle(color: _muted, fontSize: 13),
+                        prefixIcon: const Icon(Icons.search_rounded, color: _clay),
+                        suffixIcon: IconButton(onPressed: _load, icon: const Icon(Icons.arrow_forward_rounded, color: _clay)),
+                        border: InputBorder.none,
+                        contentPadding: const EdgeInsets.symmetric(vertical: 17),
                       ),
                     ),
                   ),
@@ -204,159 +206,68 @@ class _ArtBookMarketplacePageState extends State<ArtBookMarketplacePage> {
               if (_categories.isNotEmpty)
                 SliverToBoxAdapter(
                   child: SizedBox(
-                    height: 48,
+                    height: 43,
                     child: ListView(
                       padding: const EdgeInsets.symmetric(horizontal: 18),
                       scrollDirection: Axis.horizontal,
                       children: [
-                        _categoryChip('All crafts', null),
-                        ..._categories.map((category) => _categoryChip(
-                          category['name'].toString(),
-                          category['id'].toString(),
-                        )),
+                        _categoryChip('All crafts', null, isDark),
+                        ..._categories.map((category) => _categoryChip(category['name'].toString(), category['id'].toString(), isDark)),
                       ],
                     ),
                   ),
                 ),
               SliverToBoxAdapter(
                 child: Padding(
-                  padding: const EdgeInsets.fromLTRB(18, 20, 18, 10),
+                  padding: const EdgeInsets.fromLTRB(20, 23, 20, 13),
                   child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.end,
                     children: [
-                      const Expanded(
-                        child: Text(
-                          'Discover handmade',
-                          style: TextStyle(fontSize: 20, fontWeight: FontWeight.w800),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const Text('THE COLLECTION', style: TextStyle(color: _clay, fontSize: 9, fontWeight: FontWeight.w900, letterSpacing: 1.7)),
+                            const SizedBox(height: 5),
+                            Text('Discover handmade', style: TextStyle(color: text, fontSize: 22, fontWeight: FontWeight.w900, letterSpacing: -.45)),
+                          ],
                         ),
                       ),
-                      Text(
-                        '${_products.length} items',
-                        style: const TextStyle(color: Color(0xFF8B735F), fontSize: 12),
-                      ),
+                      Text('${_products.length} pieces', style: const TextStyle(color: _muted, fontSize: 11, fontWeight: FontWeight.w600)),
                     ],
                   ),
                 ),
               ),
               if (_loading)
-                const SliverFillRemaining(
-                  hasScrollBody: false,
-                  child: Center(child: CircularProgressIndicator()),
-                )
+                const SliverFillRemaining(hasScrollBody: false, child: Center(child: CircularProgressIndicator(color: _clay)))
               else if (_error != null)
-                SliverFillRemaining(
-                  hasScrollBody: false,
-                  child: _emptyState(
-                    icon: Icons.cloud_off_outlined,
-                    title: 'Marketplace unavailable',
-                    message: _error!,
-                    action: 'Try again',
-                    onPressed: _load,
-                  ),
-                )
+                SliverFillRemaining(hasScrollBody: false, child: _emptyState(icon: Icons.cloud_off_outlined, title: 'We could not load the collection', message: _error!, action: 'Try again', onPressed: _load, isDark: isDark))
               else if (_products.isEmpty)
-                SliverFillRemaining(
-                  hasScrollBody: false,
-                  child: _emptyState(
-                    icon: Icons.storefront_outlined,
-                    title: 'The marketplace is taking shape',
-                    message: 'Published artisan products will appear here. Draft listings stay private until the maker approves publication.',
-                    action: 'Refresh',
-                    onPressed: _load,
-                  ),
-                )
+                SliverFillRemaining(hasScrollBody: false, child: _emptyState(icon: Icons.storefront_outlined, title: 'A little more craft is on its way', message: 'Published artisan creations will appear here. Refresh to check for new work.', action: 'Refresh collection', onPressed: _load, isDark: isDark))
               else
                 SliverPadding(
-                  padding: const EdgeInsets.fromLTRB(18, 0, 18, 28),
+                  padding: const EdgeInsets.fromLTRB(16, 0, 16, 30),
                   sliver: SliverGrid(
-                    delegate: SliverChildBuilderDelegate(
-                      (context, index) {
-                        final product = _products[index];
-                        final imageUrl = _primaryImage(product);
-                        final artisan = product['artisan_profiles'] is Map
-                            ? Map<String, dynamic>.from(product['artisan_profiles'] as Map)
-                            : <String, dynamic>{};
-                        final category = product['craft_categories'] is Map
-                            ? Map<String, dynamic>.from(product['craft_categories'] as Map)
-                            : <String, dynamic>{};
-                        return InkWell(
-                          borderRadius: BorderRadius.circular(18),
-                          onTap: () => _openProduct(product),
-                          child: Container(
-                            decoration: BoxDecoration(
-                              color: isDark ? AppColors.neutral800 : Colors.white,
-                              borderRadius: BorderRadius.circular(18),
-                              border: Border.all(
-                                color: isDark ? AppColors.neutral700 : const Color(0xFFEDE4D9),
-                              ),
-                            ),
-                            clipBehavior: Clip.antiAlias,
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Expanded(
-                                  child: Container(
-                                    width: double.infinity,
-                                    color: const Color(0xFFF1E7DA),
-                                    child: imageUrl == null
-                                        ? const Icon(Icons.image_outlined, size: 42, color: Color(0xFF96765B))
-                                        : Image.network(
-                                            imageUrl,
-                                            fit: BoxFit.cover,
-                                            errorBuilder: (_, __, ___) => const Icon(Icons.image_not_supported_outlined),
-                                          ),
-                                  ),
-                                ),
-                                Padding(
-                                  padding: const EdgeInsets.fromLTRB(11, 10, 11, 11),
-                                  child: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
-                                    children: [
-                                      Text(
-                                        category['name']?.toString() ?? 'Handmade',
-                                        style: const TextStyle(
-                                          color: Color(0xFF9A6A40),
-                                          fontSize: 10,
-                                          fontWeight: FontWeight.w700,
-                                        ),
-                                      ),
-                                      const SizedBox(height: 4),
-                                      Text(
-                                        product['title']?.toString() ?? 'Handmade creation',
-                                        maxLines: 2,
-                                        overflow: TextOverflow.ellipsis,
-                                        style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 13),
-                                      ),
-                                      const SizedBox(height: 6),
-                                      Text(
-                                        artisan['public_name']?.toString() ?? 'Artisan',
-                                        maxLines: 1,
-                                        overflow: TextOverflow.ellipsis,
-                                        style: const TextStyle(color: Color(0xFF8B735F), fontSize: 10),
-                                      ),
-                                      const SizedBox(height: 8),
-                                      Text(
-                                        '₹${product['price'] ?? '—'}',
-                                        style: const TextStyle(
-                                          color: Color(0xFF6F3E2B),
-                                          fontWeight: FontWeight.w900,
-                                          fontSize: 15,
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        );
-                      },
-                      childCount: _products.length,
-                    ),
+                    delegate: SliverChildBuilderDelegate((context, index) {
+                      final product = _products[index];
+                      final imageUrl = _primaryImage(product);
+                      final artisan = product['artisan_profiles'] is Map ? Map<String, dynamic>.from(product['artisan_profiles'] as Map) : <String, dynamic>{};
+                      final category = product['craft_categories'] is Map ? Map<String, dynamic>.from(product['craft_categories'] as Map) : <String, dynamic>{};
+                      return _ProductTile(
+                        imageUrl: imageUrl,
+                        category: category['name']?.toString() ?? 'HANDMADE',
+                        title: product['title']?.toString() ?? 'Handmade creation',
+                        artisan: artisan['public_name']?.toString() ?? 'Independent artisan',
+                        price: product['price']?.toString() ?? '—',
+                        isDark: isDark,
+                        onTap: () => _openProduct(product),
+                      );
+                    }, childCount: _products.length),
                     gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
                       crossAxisCount: 2,
-                      mainAxisSpacing: 13,
-                      crossAxisSpacing: 13,
-                      childAspectRatio: 0.66,
+                      mainAxisSpacing: 14,
+                      crossAxisSpacing: 12,
+                      childAspectRatio: .66,
                     ),
                   ),
                 ),
@@ -367,7 +278,7 @@ class _ArtBookMarketplacePageState extends State<ArtBookMarketplacePage> {
     );
   }
 
-  Widget _categoryChip(String label, String? id) {
+  Widget _categoryChip(String label, String? id, bool isDark) {
     final selected = _selectedCategory == id;
     return Padding(
       padding: const EdgeInsets.only(right: 8),
@@ -378,36 +289,87 @@ class _ArtBookMarketplacePageState extends State<ArtBookMarketplacePage> {
           setState(() => _selectedCategory = id);
           _load();
         },
-        selectedColor: const Color(0xFFE9D8C5),
-        labelStyle: TextStyle(
-          fontSize: 12,
-          color: selected ? const Color(0xFF542F20) : null,
-          fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
-        ),
+        showCheckmark: false,
+        selectedColor: _clay,
+        backgroundColor: isDark ? AppColors.neutral800 : Colors.white,
+        side: BorderSide(color: selected ? _clay : (isDark ? AppColors.neutral700 : _line)),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
+        labelStyle: TextStyle(fontSize: 11, color: selected ? Colors.white : (isDark ? Colors.white70 : _ink), fontWeight: FontWeight.w700),
       ),
     );
   }
 
-  Widget _emptyState({
-    required IconData icon,
-    required String title,
-    required String message,
-    required String action,
-    required VoidCallback onPressed,
-  }) {
+  Widget _emptyState({required IconData icon, required String title, required String message, required String action, required VoidCallback onPressed, required bool isDark}) {
     return Center(
       child: Padding(
         padding: const EdgeInsets.all(28),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(icon, size: 48, color: const Color(0xFF9A806A)),
-            const SizedBox(height: 12),
-            Text(title, style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 17)),
+            Container(width: 76, height: 76, decoration: BoxDecoration(color: _clay.withValues(alpha: .10), shape: BoxShape.circle), child: Icon(icon, size: 34, color: _clay)),
+            const SizedBox(height: 18),
+            Text(title, textAlign: TextAlign.center, style: TextStyle(color: isDark ? Colors.white : _ink, fontWeight: FontWeight.w800, fontSize: 17)),
             const SizedBox(height: 8),
-            Text(message, textAlign: TextAlign.center, style: const TextStyle(color: Color(0xFF8B735F))),
-            const SizedBox(height: 16),
-            OutlinedButton(onPressed: onPressed, child: Text(action)),
+            Text(message, textAlign: TextAlign.center, style: const TextStyle(color: _muted, height: 1.45, fontSize: 12)),
+            const SizedBox(height: 18),
+            FilledButton(onPressed: onPressed, style: FilledButton.styleFrom(backgroundColor: _clay, foregroundColor: Colors.white), child: Text(action)),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _ProductTile extends StatelessWidget {
+  final String? imageUrl;
+  final String category;
+  final String title;
+  final String artisan;
+  final String price;
+  final bool isDark;
+  final VoidCallback onTap;
+
+  const _ProductTile({required this.imageUrl, required this.category, required this.title, required this.artisan, required this.price, required this.isDark, required this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    final text = isDark ? Colors.white : const Color(0xFF28251F);
+    return Material(
+      color: isDark ? AppColors.neutral800 : Colors.white,
+      borderRadius: BorderRadius.circular(20),
+      clipBehavior: Clip.antiAlias,
+      child: InkWell(
+        onTap: onTap,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Expanded(
+              child: Stack(
+                fit: StackFit.expand,
+                children: [
+                  Container(
+                    color: const Color(0xFFEDE4D8),
+                    child: imageUrl == null
+                        ? const Center(child: Icon(Icons.image_outlined, size: 42, color: Color(0xFF9A806A)))
+                        : Image.network(imageUrl!, fit: BoxFit.cover, errorBuilder: (_, __, ___) => const Center(child: Icon(Icons.image_not_supported_outlined, color: Color(0xFF9A806A)))),
+                  ),
+                  Positioned(top: 10, left: 10, child: Container(padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 5), decoration: BoxDecoration(color: Colors.white.withValues(alpha: .93), borderRadius: BorderRadius.circular(20)), child: Text(category.toUpperCase(), maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(color: Color(0xFF704331), fontSize: 8, fontWeight: FontWeight.w900, letterSpacing: .5)))),
+                ],
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(11, 11, 11, 12),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(title, maxLines: 2, overflow: TextOverflow.ellipsis, style: TextStyle(color: text, fontSize: 13, height: 1.25, fontWeight: FontWeight.w800)),
+                  const SizedBox(height: 6),
+                  Row(children: [const Icon(Icons.person_outline_rounded, size: 12, color: Color(0xFF9A806A)), const SizedBox(width: 4), Expanded(child: Text(artisan, maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(color: Color(0xFF8B8176), fontSize: 10)))]),
+                  const SizedBox(height: 9),
+                  Text('₹$price', style: const TextStyle(color: Color(0xFF914A34), fontSize: 16, fontWeight: FontWeight.w900)),
+                ],
+              ),
+            ),
           ],
         ),
       ),
