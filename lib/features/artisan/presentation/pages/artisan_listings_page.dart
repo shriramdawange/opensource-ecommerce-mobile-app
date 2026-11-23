@@ -220,113 +220,202 @@ class _ArtisanListingsPageState extends State<ArtisanListingsPage> {
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    const clay = Color(0xFF98543D);
+    const paper = Color(0xFFFAF8F4);
+    const ink = Color(0xFF292720);
+    const muted = Color(0xFF817D73);
+    final background = isDark ? AppColors.neutral900 : paper;
+    final surface = isDark ? AppColors.neutral800 : Colors.white;
+    final primaryText = isDark ? Colors.white : ink;
+    final published = _products.where((p) => p['status'] == 'published').length;
+    final inReview = _products.where((p) => p['status'] == 'submitted').length;
+    final drafts = _products.where((p) => p['status'] == 'draft').length;
+
     return Scaffold(
-      backgroundColor: isDark ? AppColors.neutral900 : AppColors.neutral50,
+      backgroundColor: background,
       appBar: AppBar(
-        title: const Text('My ArtBook Listings'),
-        backgroundColor: isDark ? AppColors.neutral900 : AppColors.white,
+        backgroundColor: background,
+        elevation: 0,
+        titleSpacing: 20,
+        title: Text('My listings', style: TextStyle(color: primaryText, fontSize: 21, fontWeight: FontWeight.w800, letterSpacing: -.4)),
+        actions: [
+          IconButton(onPressed: _load, tooltip: 'Refresh listings', icon: Icon(Icons.refresh_rounded, color: primaryText)),
+          const SizedBox(width: 6),
+        ],
       ),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: _createProduct,
-        backgroundColor: AppColors.primary500,
-        foregroundColor: AppColors.white,
-        icon: const Icon(Icons.add),
-        label: const Text('New listing'),
+        backgroundColor: clay,
+        foregroundColor: Colors.white,
+        elevation: 3,
+        icon: const Icon(Icons.add_rounded),
+        label: const Text('Create listing', style: TextStyle(fontWeight: FontWeight.w700)),
       ),
       body: _loading
-          ? const Center(child: CircularProgressIndicator())
+          ? const Center(child: CircularProgressIndicator(color: clay))
           : _error != null
               ? Center(
                   child: Padding(
                     padding: const EdgeInsets.all(24),
-                    child: Text(_error!, textAlign: TextAlign.center),
+                    child: Column(mainAxisSize: MainAxisSize.min, children: [
+                      const Icon(Icons.cloud_off_outlined, size: 42, color: clay),
+                      const SizedBox(height: 12),
+                      Text('Could not load your listings', style: TextStyle(color: primaryText, fontSize: 17, fontWeight: FontWeight.w800)),
+                      const SizedBox(height: 6),
+                      Text(_error!, textAlign: TextAlign.center, style: const TextStyle(color: muted, fontSize: 12)),
+                      const SizedBox(height: 16),
+                      FilledButton(onPressed: _load, style: FilledButton.styleFrom(backgroundColor: clay), child: const Text('Try again')),
+                    ]),
                   ),
                 )
-              : _products.isEmpty
-                  ? const Center(
-                      child: Padding(
-                        padding: EdgeInsets.all(32),
-                        child: Column(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Icon(Icons.inventory_2_outlined, size: 48),
-                            SizedBox(height: 12),
-                            Text(
-                              'Your craft deserves to be seen.',
-                              style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700),
-                            ),
-                            SizedBox(height: 6),
-                            Text(
-                              'Create your first product listing. It will be saved as a draft until it is reviewed and approved.',
-                              textAlign: TextAlign.center,
-                            ),
-                          ],
+              : RefreshIndicator(
+                  color: clay,
+                  onRefresh: _load,
+                  child: ListView(
+                    padding: const EdgeInsets.fromLTRB(18, 8, 18, 110),
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(20),
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(24),
+                          gradient: const LinearGradient(
+                            begin: Alignment.topLeft,
+                            end: Alignment.bottomRight,
+                            colors: [Color(0xFF56382E), Color(0xFF98543D), Color(0xFFB87552)],
+                          ),
                         ),
+                        child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                          const Text('YOUR CREATOR STUDIO', style: TextStyle(color: Color(0xFFFFDDC9), fontSize: 9, fontWeight: FontWeight.w900, letterSpacing: 1.7)),
+                          const SizedBox(height: 8),
+                          const Text('Every piece has\na place here.', style: TextStyle(color: Colors.white, fontSize: 27, height: 1.08, fontWeight: FontWeight.w900, letterSpacing: -.5)),
+                          const SizedBox(height: 8),
+                          const Text('Manage your creations, follow their progress and connect with buyers.', style: TextStyle(color: Color(0xFFF4E6DD), fontSize: 12, height: 1.45)),
+                          const SizedBox(height: 18),
+                          Row(children: [
+                            _listingMetric('Published', published),
+                            const SizedBox(width: 9),
+                            _listingMetric('In review', inReview),
+                            const SizedBox(width: 9),
+                            _listingMetric('Drafts', drafts),
+                          ]),
+                        ]),
                       ),
-                    )
-                  : RefreshIndicator(
-                      onRefresh: _load,
-                      child: ListView.separated(
-                        padding: const EdgeInsets.fromLTRB(16, 16, 16, 96),
-                        itemCount: _products.length,
-                        separatorBuilder: (_, __) => const SizedBox(height: 10),
-                        itemBuilder: (context, index) {
-                          final product = _products[index];
+                      const SizedBox(height: 23),
+                      Row(children: [
+                        Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                          const Text('YOUR CATALOGUE', style: TextStyle(color: clay, fontSize: 9, fontWeight: FontWeight.w900, letterSpacing: 1.6)),
+                          const SizedBox(height: 5),
+                          Text('Your creations', style: TextStyle(color: primaryText, fontSize: 21, fontWeight: FontWeight.w900, letterSpacing: -.4)),
+                        ])),
+                        Text('${_products.length} total', style: const TextStyle(color: muted, fontSize: 11, fontWeight: FontWeight.w600)),
+                      ]),
+                      const SizedBox(height: 13),
+                      if (_products.isEmpty)
+                        Container(
+                          padding: const EdgeInsets.fromLTRB(22, 28, 22, 25),
+                          decoration: BoxDecoration(color: surface, borderRadius: BorderRadius.circular(22), border: Border.all(color: isDark ? AppColors.neutral700 : const Color(0xFFECE7DF))),
+                          child: Column(children: [
+                            Container(width: 66, height: 66, decoration: BoxDecoration(color: const Color(0xFFF1E5DC), borderRadius: BorderRadius.circular(22)), child: const Icon(Icons.palette_outlined, color: clay, size: 30)),
+                            const SizedBox(height: 15),
+                            Text('Your first creation starts here', style: TextStyle(color: primaryText, fontSize: 17, fontWeight: FontWeight.w800)),
+                            const SizedBox(height: 7),
+                            const Text('Add a few photos and tell the story behind your craft. You can save it as a draft and finish whenever you are ready.', textAlign: TextAlign.center, style: TextStyle(color: muted, fontSize: 12, height: 1.5)),
+                            const SizedBox(height: 17),
+                            OutlinedButton.icon(onPressed: _createProduct, icon: const Icon(Icons.add_rounded), label: const Text('Create your first listing'), style: OutlinedButton.styleFrom(foregroundColor: clay, side: const BorderSide(color: clay))),
+                          ]),
+                        )
+                      else
+                        ..._products.map((product) {
                           final media = product['product_media'] as List? ?? const [];
                           final status = product['status']?.toString() ?? 'draft';
-                          return Card(
+                          final title = product['title']?.toString() ?? 'Untitled creation';
+                          String? imageUrl;
+                          if (media.isNotEmpty && media.first is Map && media.first['storage_path'] != null) {
+                            final first = media.first;
+                            final bucket = first['storage_bucket']?.toString() ?? 'artbook-product-media';
+                            imageUrl = ArtBookSupabase.client.storage.from(bucket).getPublicUrl(first['storage_path'].toString());
+                          }
+                          final statusLabel = switch (status) {
+                            'published' => 'Published',
+                            'submitted' => 'In review',
+                            'rejected' => 'Needs changes',
+                            _ => 'Draft',
+                          };
+                          final statusColor = switch (status) {
+                            'published' => const Color(0xFF39704F),
+                            'submitted' => const Color(0xFF9A6A25),
+                            'rejected' => const Color(0xFFB34E43),
+                            _ => const Color(0xFF81796E),
+                          };
+                          return Container(
+                            margin: const EdgeInsets.only(bottom: 12),
+                            decoration: BoxDecoration(color: surface, borderRadius: BorderRadius.circular(20), border: Border.all(color: isDark ? AppColors.neutral700 : const Color(0xFFECE7DF))),
                             child: Padding(
-                              padding: const EdgeInsets.all(8),
-                              child: Column(
-                                children: [
-                                  ListTile(
-                                    leading: const CircleAvatar(
-                                      child: Icon(Icons.palette_outlined),
+                              padding: const EdgeInsets.all(11),
+                              child: Column(children: [
+                                Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                                  ClipRRect(
+                                    borderRadius: BorderRadius.circular(14),
+                                    child: Container(
+                                      width: 92,
+                                      height: 104,
+                                      color: const Color(0xFFEDE4D8),
+                                      child: imageUrl == null
+                                          ? const Icon(Icons.image_outlined, color: Color(0xFF9A806A), size: 30)
+                                          : Image.network(imageUrl, fit: BoxFit.cover, errorBuilder: (_, __, ___) => const Icon(Icons.image_not_supported_outlined, color: Color(0xFF9A806A))),
                                     ),
-                                    title: Text(product['title']?.toString() ?? 'Untitled'),
-                                    subtitle: Text(
-                                      '₹${product['price'] ?? '—'}  ·  ${status.toUpperCase()}  ·  ${media.length} photo(s)',
-                                    ),
-                                    isThreeLine: true,
                                   ),
-                                  if (status == 'draft' || status == 'submitted')
-                                    Align(
-                                      alignment: Alignment.centerRight,
-                                      child: TextButton.icon(
-                                        onPressed: () => _requestPublication(product),
-                                        icon: const Icon(Icons.publish_outlined),
-                                        label: const Text('Review & publish'),
-                                      ),
-                                    ),
-                                  if (status == 'published')
-                                    Padding(
-                                      padding: const EdgeInsets.symmetric(horizontal: 8),
-                                      child: Row(
-                                        children: [
-                                          Expanded(
-                                            child: TextButton.icon(
-                                              onPressed: () => _showPriceGuidance(product),
-                                              icon: const Icon(Icons.insights_outlined, size: 18),
-                                              label: const Text('Price insights'),
-                                            ),
-                                          ),
-                                          Expanded(
-                                            child: TextButton.icon(
-                                              onPressed: () => _showBuyerMatches(product),
-                                              icon: const Icon(Icons.people_alt_outlined, size: 18),
-                                              label: const Text('Find buyers'),
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                    ),
-                                ],
-                              ),
+                                  const SizedBox(width: 13),
+                                  Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                                    Container(padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 5), decoration: BoxDecoration(color: statusColor.withValues(alpha: .10), borderRadius: BorderRadius.circular(20)), child: Text(statusLabel.toUpperCase(), style: TextStyle(color: statusColor, fontSize: 8, fontWeight: FontWeight.w900, letterSpacing: .7))),
+                                    const SizedBox(height: 8),
+                                    Text(title, maxLines: 2, overflow: TextOverflow.ellipsis, style: TextStyle(color: primaryText, fontSize: 14, height: 1.2, fontWeight: FontWeight.w800)),
+                                    const SizedBox(height: 6),
+                                    Text('₹${product['price'] ?? '—'}', style: const TextStyle(color: clay, fontSize: 17, fontWeight: FontWeight.w900)),
+                                    const SizedBox(height: 4),
+                                    Text('${media.length} photo(s)', style: const TextStyle(color: muted, fontSize: 10)),
+                                  ])),
+                                ]),
+                                if (status == 'draft' || status == 'submitted')
+                                  Padding(
+                                    padding: const EdgeInsets.only(top: 10),
+                                    child: SizedBox(width: double.infinity, child: FilledButton.tonalIcon(
+                                      onPressed: () => _requestPublication(product),
+                                      icon: const Icon(Icons.fact_check_outlined, size: 17),
+                                      label: const Text('Review & publish'),
+                                      style: FilledButton.styleFrom(foregroundColor: clay, backgroundColor: clay.withValues(alpha: .10), padding: const EdgeInsets.symmetric(vertical: 11)),
+                                    )),
+                                  ),
+                                if (status == 'published')
+                                  Padding(
+                                    padding: const EdgeInsets.only(top: 9),
+                                    child: Row(children: [
+                                      Expanded(child: OutlinedButton.icon(onPressed: () => _showPriceGuidance(product), icon: const Icon(Icons.insights_outlined, size: 16), label: const Text('Price insights'), style: OutlinedButton.styleFrom(foregroundColor: clay, side: BorderSide(color: clay.withValues(alpha: .35))))),
+                                      const SizedBox(width: 9),
+                                      Expanded(child: OutlinedButton.icon(onPressed: () => _showBuyerMatches(product), icon: const Icon(Icons.people_outline_rounded, size: 16), label: const Text('Find buyers'), style: OutlinedButton.styleFrom(foregroundColor: clay, side: BorderSide(color: clay.withValues(alpha: .35))))),
+                                    ]),
+                                  ),
+                              ]),
                             ),
                           );
-                        },
-                      ),
-                    ),
+                        }),
+                    ],
+                  ),
+                ),
+    );
+  }
+
+  Widget _listingMetric(String label, int value) {
+    return Expanded(
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
+        decoration: BoxDecoration(color: Colors.white.withValues(alpha: .12), borderRadius: BorderRadius.circular(13), border: Border.all(color: Colors.white.withValues(alpha: .12))),
+        child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+          Text('$value', style: const TextStyle(color: Colors.white, fontSize: 19, fontWeight: FontWeight.w900)),
+          const SizedBox(height: 2),
+          Text(label, style: const TextStyle(color: Color(0xFFF4E6DD), fontSize: 9, fontWeight: FontWeight.w600)),
+        ]),
+      ),
     );
   }
 }
