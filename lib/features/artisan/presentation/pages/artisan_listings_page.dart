@@ -132,14 +132,14 @@ class _ArtisanListingsPageState extends State<ArtisanListingsPage> {
                           const SizedBox(height: 3),
                           Text(
                             '${score.toStringAsFixed(0)}% match · Qty ${match['quantity'] ?? 1}',
-                            style: const TextStyle(color: Color(0xFF8B735F), fontSize: 12),
+                            style: const TextStyle(color: Color(0xFF77727A), fontSize: 12),
                           ),
                           if ((match['description'] ?? '').toString().isNotEmpty)
                             Text(match['description'].toString()),
                           if (match['match_reasons'] is List)
                             Text(
                               (match['match_reasons'] as List).join(' · '),
-                              style: const TextStyle(fontSize: 11, color: Color(0xFF8B735F)),
+                              style: const TextStyle(fontSize: 11, color: Color(0xFF77727A)),
                             ),
                         ],
                       );
@@ -345,7 +345,7 @@ class _ArtisanListingsPageState extends State<ArtisanListingsPage> {
                             'published' => const Color(0xFF39704F),
                             'submitted' => const Color(0xFF9A6A25),
                             'rejected' => const Color(0xFFB34E43),
-                            _ => const Color(0xFF81796E),
+                            _ => const Color(0xFF77727A),
                           };
                           return Container(
                             margin: const EdgeInsets.only(bottom: 12),
@@ -626,7 +626,7 @@ class _CreateArtisanProductPageState extends State<CreateArtisanProductPage> {
       if (!mounted) return;
       final message = error.toString();
       setState(() {
-        _error = message.contains('ARTBOOK_AI_PROVIDER_NOT_CONFIGURED')
+        _error = message.contains('DARSH_AI_PROVIDER_NOT_CONFIGURED')
             ? 'ArtBook AI needs an AI provider configured in Supabase Edge Function secrets. You can still create this listing manually.'
             : 'Could not generate the AI draft: $message';
       });
@@ -794,7 +794,7 @@ class _CreateArtisanProductPageState extends State<CreateArtisanProductPage> {
                         const SizedBox(height: 6),
                         const Text(
                           'AI suggestions are not facts. Check the craft name, materials, origin and story before saving.',
-                          style: TextStyle(fontSize: 11, color: Color(0xFF8B735F)),
+                          style: TextStyle(fontSize: 11, color: Color(0xFF77727A)),
                         ),
                         if (_agentCaseId != null)
                           const Padding(
