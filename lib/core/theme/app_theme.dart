@@ -5,21 +5,26 @@ import 'package:flutter/material.dart';
 /// Dark mode: node-id=92-1730
 
 class AppColors {
+  // DARSH brand palette
+  static const Color brandCoral = Color(0xFFFF5366);
+  static const Color brandRose = Color(0xFFFF8290);
+  static const Color brandBlush = Color(0xFFFFE8EC);
+  static const Color brandCanvas = Color(0xFFF9F9FB);
   // Primary
-  static const Color primary500 = Color(0xFFFF6900);
-  static const Color primary600 = Color(0xFFF54900);
+  static const Color primary500 = Color(0xFFEA1A34);
+  static const Color primary600 = Color(0xFFB91436);
 
   // Neutral - Light
-  static const Color neutral50 = Color(0xFFFAFAFA);
-  static const Color neutral100 = Color(0xFFF5F5F5);
-  static const Color neutral200 = Color(0xFFE5E5E5);
-  static const Color neutral300 = Color(0xFFD4D4D4);
-  static const Color neutral400 = Color(0xFFA1A1A1);
-  static const Color neutral500 = Color(0xFF737373);
-  static const Color neutral600 = Color(0xFF525252);
-  static const Color neutral700 = Color(0xFF404040);
-  static const Color neutral800 = Color(0xFF262626);
-  static const Color neutral900 = Color(0xFF171717);
+  static const Color neutral50 = Color(0xFFF9F9FB);
+  static const Color neutral100 = Color(0xFFF1F0F2);
+  static const Color neutral200 = Color(0xFFE7E5E9);
+  static const Color neutral300 = Color(0xFFD8D5DA);
+  static const Color neutral400 = Color(0xFFAAA5AD);
+  static const Color neutral500 = Color(0xFF77727A);
+  static const Color neutral600 = Color(0xFF5C5760);
+  static const Color neutral700 = Color(0xFF454149);
+  static const Color neutral800 = Color(0xFF302D34);
+  static const Color neutral900 = Color(0xFF25232A);
 
   // Status
   static const Color successGreen = Color(0xFF00A63E);
