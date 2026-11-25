@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 
 import '../../../core/theme/app_theme.dart';
 
@@ -17,7 +18,6 @@ class _SplashScreenState extends State<SplashScreen> {
   void initState() {
     super.initState();
     SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
-
     Future.delayed(const Duration(milliseconds: 1400), () {
       if (!mounted) return;
       Navigator.of(context).pushReplacement(
@@ -38,41 +38,38 @@ class _SplashScreenState extends State<SplashScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFFAF7F1),
+      backgroundColor: AppColors.white,
       body: Center(
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Container(
-              width: 88,
-              height: 88,
-              decoration: BoxDecoration(
-                color: const Color(0xFF6F3E2B),
-                borderRadius: BorderRadius.circular(26),
-              ),
-              child: const Icon(
-                Icons.auto_awesome,
-                color: Color(0xFFFFE8C9),
-                size: 44,
+            SizedBox(
+              width: 124,
+              height: 124,
+              child: SvgPicture.asset(
+                'assets/branding/darsh_mascot.svg',
+                fit: BoxFit.contain,
+                semanticsLabel: 'DARSH mascot',
               ),
             ),
             const SizedBox(height: 18),
             const Text(
-              'ARTBOOK',
+              'DARSH',
               style: TextStyle(
-                color: Color(0xFF4B2B20),
-                fontSize: 25,
-                fontWeight: FontWeight.w900,
-                letterSpacing: 3.2,
+                color: AppColors.neutral900,
+                fontSize: 27,
+                fontWeight: FontWeight.w800,
+                letterSpacing: 2.4,
+                height: 1.1,
               ),
             ),
             const SizedBox(height: 7),
             const Text(
-              'Stories made by hand',
+              'Creativity has no limits.',
               style: TextStyle(
-                color: Color(0xFF8B735F),
+                color: AppColors.neutral500,
                 fontSize: 13,
-                letterSpacing: 0.5,
+                letterSpacing: 0.25,
               ),
             ),
             const SizedBox(height: 28),
