@@ -1,9 +1,10 @@
-name: ArtBook Android Build & CI
+name: DARSH Android Build & CI
 
 on:
   push:
     branches:
       - agent
+      - main
   pull_request:
     branches:
       - main
@@ -19,7 +20,7 @@ concurrency:
 
 jobs:
   android-apk:
-    name: Build, analyze and upload ArtBook APK
+    name: Build, analyze and upload DARSH APK
     runs-on: ubuntu-latest
     timeout-minutes: 40
     steps:
@@ -47,8 +48,19 @@ jobs:
           flutter config --jdk-dir="$JAVA_HOME"
           flutter doctor -v
 
+      - name: Prepare launcher icon source
+        run: |
+          python -m pip install --quiet cairosvg
+          python - <<'PY'
+          import cairosvg
+          cairosvg.svg2png(url='assets/branding/darsh_mascot.svg', write_to='assets/branding/darsh_icon.png', output_width=1024, output_height=1024, background_color='#FFFFFF')
+          PY
+
       - name: Resolve packages
         run: flutter pub get
+
+      - name: Generate Android and iOS app icons
+        run: dart run flutter_launcher_icons
 
       - name: Generate localizations
         run: flutter gen-l10n
@@ -90,10 +102,10 @@ jobs:
       - name: Verify APK exists
         run: test -s build/app/outputs/flutter-apk/app-release.apk
 
-      - name: Upload installable APK
+      - name: Upload installable DARSH APK
         uses: actions/upload-artifact@v4
         with:
-          name: artbook-android-apk
+          name: darsh-android-apk
           path: build/app/outputs/flutter-apk/app-release.apk
           if-no-files-found: error
           retention-days: 14
