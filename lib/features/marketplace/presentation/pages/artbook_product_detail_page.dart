@@ -16,10 +16,10 @@ class _ArtBookProductDetailPageState extends State<ArtBookProductDetailPage> {
   int _quantity = 1;
   bool _adding = false;
 
-  static const _clay = Color(0xFF9A4F36);
-  static const _paper = Color(0xFFFAF7F1);
-  static const _ink = Color(0xFF28251F);
-  static const _muted = Color(0xFF81796E);
+  static const _clay = Color(0xFFEA1A34);
+  static const _paper = Color(0xFFF9F9FB);
+  static const _ink = Color(0xFF25232A);
+  static const _muted = Color(0xFF77727A);
 
   String? get _imageUrl {
     final media = widget.product['product_media'];
@@ -39,7 +39,7 @@ class _ArtBookProductDetailPageState extends State<ArtBookProductDetailPage> {
       );
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Added to your ArtBook cart.'), behavior: SnackBarBehavior.floating),
+        const SnackBar(content: Text('Added to your DARSH cart.'), behavior: SnackBarBehavior.floating),
       );
     } catch (error) {
       if (!mounted) return;
@@ -72,7 +72,7 @@ class _ArtBookProductDetailPageState extends State<ArtBookProductDetailPage> {
       bottomNavigationBar: SafeArea(
         child: Container(
           padding: const EdgeInsets.fromLTRB(18, 12, 18, 14),
-          decoration: BoxDecoration(color: card, border: Border(top: BorderSide(color: isDark ? AppColors.neutral700 : const Color(0xFFECE5DA)))),
+          decoration: BoxDecoration(color: card, border: Border(top: BorderSide(color: isDark ? AppColors.neutral700 : const Color(0xFFF1F0F2)))),
           child: Row(children: [
             Expanded(child: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.start, children: [
               const Text('TOTAL PRICE', style: TextStyle(color: _muted, fontSize: 9, fontWeight: FontWeight.w900, letterSpacing: 1)),
@@ -111,7 +111,7 @@ class _ArtBookProductDetailPageState extends State<ArtBookProductDetailPage> {
           const SizedBox(height: 15),
           Container(
             padding: const EdgeInsets.all(14),
-            decoration: BoxDecoration(color: card, borderRadius: BorderRadius.circular(18), border: Border.all(color: isDark ? AppColors.neutral700 : const Color(0xFFECE5DA))),
+            decoration: BoxDecoration(color: card, borderRadius: BorderRadius.circular(18), border: Border.all(color: isDark ? AppColors.neutral700 : const Color(0xFFF1F0F2))),
             child: Row(children: [
               Container(width: 44, height: 44, decoration: BoxDecoration(color: const Color(0xFFEAD8C8), borderRadius: BorderRadius.circular(14)), child: const Icon(Icons.person_outline_rounded, color: _clay)),
               const SizedBox(width: 11),
@@ -133,7 +133,7 @@ class _ArtBookProductDetailPageState extends State<ArtBookProductDetailPage> {
           const SizedBox(height: 18),
           Container(
             padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(color: card, borderRadius: BorderRadius.circular(18), border: Border.all(color: isDark ? AppColors.neutral700 : const Color(0xFFECE5DA))),
+            decoration: BoxDecoration(color: card, borderRadius: BorderRadius.circular(18), border: Border.all(color: isDark ? AppColors.neutral700 : const Color(0xFFF1F0F2))),
             child: Row(children: [
               Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [Text('Choose quantity', style: TextStyle(color: text, fontWeight: FontWeight.w800, fontSize: 13)), const SizedBox(height: 3), const Text('Each piece supports a maker.', style: TextStyle(color: _muted, fontSize: 10))])),
               IconButton(onPressed: _quantity > 1 ? () => setState(() => _quantity--) : null, icon: const Icon(Icons.remove_circle_outline_rounded, color: _clay)),
