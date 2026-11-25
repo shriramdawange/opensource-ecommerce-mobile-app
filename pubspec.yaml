@@ -1,5 +1,5 @@
 name: bagisto_flutter
-description: "ArtBook — an AI-powered creative marketplace for artisans and weavers."
+description: "DARSH — an AI-powered creative marketplace for artisans and weavers."
 # The following line prevents the package from being accidentally published to
 # pub.dev using `flutter pub publish`. This is preferred for private packages.
 publish_to: 'none' # Remove this line if you wish to publish to pub.dev
