@@ -50,10 +50,15 @@ jobs:
 
       - name: Prepare launcher icon source
         run: |
-          python -m pip install --quiet cairosvg
+          python -m pip install --quiet cairosvg pillow
           python - <<'PY'
           import cairosvg
-          cairosvg.svg2png(url='assets/branding/darsh_mascot.svg', write_to='assets/branding/darsh_icon.png', output_width=1024, output_height=1024, background_color='#FFFFFF')
+          from PIL import Image
+          cairosvg.svg2png(url='assets/branding/darsh_mascot.svg', write_to='/tmp/darsh_mascot.png', output_width=760)
+          mascot = Image.open('/tmp/darsh_mascot.png').convert('RGBA')
+          canvas = Image.new('RGBA', (1024, 1024), '#FFFFFF')
+          canvas.alpha_composite(mascot, ((1024 - mascot.width) // 2, (1024 - mascot.height) // 2))
+          canvas.convert('RGB').save('assets/branding/darsh_icon.png')
           PY
 
       - name: Resolve packages
