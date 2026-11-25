@@ -22,11 +22,11 @@ class _ArtBookMarketplacePageState extends State<ArtBookMarketplacePage> {
   bool _loading = true;
   String? _error;
 
-  static const _ink = Color(0xFF28251F);
-  static const _muted = Color(0xFF81796E);
-  static const _paper = Color(0xFFFAF7F1);
-  static const _clay = Color(0xFF9A4F36);
-  static const _line = Color(0xFFECE5DA);
+  static const _ink = Color(0xFF25232A);
+  static const _muted = Color(0xFF77727A);
+  static const _paper = Color(0xFFF9F9FB);
+  static const _clay = Color(0xFFEA1A34);
+  static const _line = Color(0xFFF1F0F2);
 
   @override
   void initState() {
@@ -122,7 +122,7 @@ class _ArtBookMarketplacePageState extends State<ArtBookMarketplacePage> {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Text('ARTBOOK', style: TextStyle(color: text, fontSize: 17, fontWeight: FontWeight.w900, letterSpacing: 2.1)),
+                            Text('DARSH', style: TextStyle(color: text, fontSize: 17, fontWeight: FontWeight.w900, letterSpacing: 2.1)),
                             const SizedBox(height: 2),
                             const Text('A marketplace of makers & meaning', style: TextStyle(color: _muted, fontSize: 11, letterSpacing: .15)),
                           ],
@@ -147,7 +147,7 @@ class _ArtBookMarketplacePageState extends State<ArtBookMarketplacePage> {
                       gradient: const LinearGradient(
                         begin: Alignment.topLeft,
                         end: Alignment.bottomRight,
-                        colors: [Color(0xFF633B2D), Color(0xFF9A4F36), Color(0xFFC17A50)],
+                        colors: [Color(0xFFB91436), Color(0xFFEA1A34), Color(0xFFFF5366)],
                       ),
                       boxShadow: [BoxShadow(color: _clay.withValues(alpha: .20), blurRadius: 22, offset: const Offset(0, 10))],
                     ),
@@ -162,12 +162,12 @@ class _ArtBookMarketplacePageState extends State<ArtBookMarketplacePage> {
                               Container(
                                 padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
                                 decoration: BoxDecoration(color: Colors.white.withValues(alpha: .14), borderRadius: BorderRadius.circular(30)),
-                                child: const Text('MADE SLOW. TREASURED FOREVER.', style: TextStyle(color: Color(0xFFFFE8D5), fontSize: 9, fontWeight: FontWeight.w800, letterSpacing: 1.2)),
+                                child: const Text('MADE SLOW. TREASURED FOREVER.', style: TextStyle(color: Color(0xFFFFE8EC), fontSize: 9, fontWeight: FontWeight.w800, letterSpacing: 1.2)),
                               ),
                               const SizedBox(height: 15),
                               const Text('Every craft has\na story.', style: TextStyle(color: Colors.white, fontSize: 31, height: 1.08, fontWeight: FontWeight.w900, letterSpacing: -.7)),
                               const SizedBox(height: 9),
-                              const Text('Meet the makers. Discover the hands, heritage and heart behind every creation.', style: TextStyle(color: Color(0xFFF4E5D9), fontSize: 12, height: 1.45)),
+                              const Text('Meet the makers. Discover the hands, heritage and heart behind every creation.', style: TextStyle(color: Color(0xFFFFE8EC), fontSize: 12, height: 1.45)),
                             ],
                           ),
                         ),
@@ -333,7 +333,7 @@ class _ProductTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final text = isDark ? Colors.white : const Color(0xFF28251F);
+    final text = isDark ? Colors.white : const Color(0xFF25232A);
     return Material(
       color: isDark ? AppColors.neutral800 : Colors.white,
       borderRadius: BorderRadius.circular(20),
