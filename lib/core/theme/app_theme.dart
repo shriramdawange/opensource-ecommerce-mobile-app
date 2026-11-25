@@ -182,6 +182,7 @@ class AppTheme {
       brightness: Brightness.light,
       fontFamily: 'Roboto',
       scaffoldBackgroundColor: AppColors.white,
+      visualDensity: VisualDensity.standard,
       colorScheme: const ColorScheme.light(
         primary: AppColors.primary500,
         secondary: AppColors.primary600,
@@ -217,6 +218,25 @@ class AppTheme {
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       ),
       dividerColor: AppColors.neutral100,
+      elevatedButtonTheme: ElevatedButtonThemeData(
+        style: ElevatedButton.styleFrom(
+          backgroundColor: AppColors.primary500,
+          foregroundColor: AppColors.white,
+          elevation: 0,
+          minimumSize: const Size(48, 48),
+          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+          textStyle: const TextStyle(fontSize: 14, fontWeight: FontWeight.w700),
+        ),
+      ),
+      inputDecorationTheme: InputDecorationTheme(
+        filled: true,
+        fillColor: AppColors.neutral50,
+        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 15),
+        border: OutlineInputBorder(borderRadius: BorderRadius.circular(14), borderSide: const BorderSide(color: AppColors.neutral200)),
+        enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(14), borderSide: const BorderSide(color: AppColors.neutral200)),
+        focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(14), borderSide: const BorderSide(color: AppColors.primary500, width: 1.5)),
+      ),
     );
   }
 
