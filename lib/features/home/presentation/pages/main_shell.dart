@@ -22,7 +22,7 @@ class MainShellState extends State<MainShell> {
   int _currentIndex = 0;
   final List<int> _tabHistory = [0];
 
-  static const _clay = Color(0xFF9A4F36);
+  static const _clay = Color(0xFFEA1A34);
 
   void switchToTab(int index) {
     if (index < 0 || index > 3 || index == _currentIndex) return;
@@ -82,7 +82,7 @@ class MainShellState extends State<MainShell> {
     return Container(
       decoration: BoxDecoration(
         color: surface,
-        border: Border(top: BorderSide(color: isDark ? AppColors.neutral700 : const Color(0xFFECE5DA))),
+        border: Border(top: BorderSide(color: isDark ? AppColors.neutral700 : const Color(0xFFF1F0F2))),
         boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: isDark ? 0 : .045), blurRadius: 18, offset: const Offset(0, -5))],
       ),
       child: SafeArea(
