@@ -15,14 +15,14 @@ This repository is the Flutter application and Supabase backend for the DARSH MV
 - **Supabase Storage:** private intake/draft media and public media only after artisan-approved publication.
 - **Supabase Edge Functions:** listing agent, price guidance, buyer matching, publication approvals and order workflow.
 
-The database schema and Edge Function source are in `supabase/`. Supabase client configuration is centralised in `lib/core/supabase/darsh_supabase.dart`.
+The database schema and Edge Function source are in `supabase/`. Supabase client configuration is centralised in `lib/core/supabase/artbook_supabase.dart`.
 
 ## MVP flows in progress
 
 1. Sign up, sign in, password reset and session restoration.
 2. Create and edit an artisan profile.
 3. Create a product draft with photos, story, category, price, available stock and private minimum acceptable price.
-4. Voice-first listing intake in Marathi, Hindi or English; image and transcript can be sent to the DARSH listing agent.
+4. Voice-first listing intake in Marathi, Hindi or English; image and transcript can be sent to the ArtBook listing agent.
 5. Review and edit AI suggestions before saving a draft.
 6. Request publication and explicitly approve making the listing public.
 7. Browse published products, maker profiles and craft categories.
@@ -50,7 +50,7 @@ flutter gen-l10n
 flutter run
 ```
 
-DARSH uses compile-time configuration overrides:
+ArtBook uses compile-time configuration overrides:
 
 ```bash
 flutter run \\
@@ -58,7 +58,7 @@ flutter run \\
   --dart-define=ARTBOOK_SUPABASE_PUBLISHABLE_KEY=sb_publishable_...
 ```
 
-The current development project URL and publishable key are configured as public-client defaults in the DARSH Supabase client file. A publishable key may be used in a mobile app only with properly configured RLS. **Never place a Supabase secret key or service-role key in Flutter code, build defines, assets or source control.**
+The current development project URL and publishable key are configured as public-client defaults in the ArtBook Supabase client file. A publishable key may be used in a mobile app only with properly configured RLS. **Never place a Supabase secret key or service-role key in Flutter code, build defines, assets or source control.**
 
 ## AI provider configuration
 
@@ -83,7 +83,7 @@ All deployed functions require a valid Supabase JWT:
 
 | Function | Purpose |
 |---|---|
-| `darsh-agent` | Creates a durable case and an artisan-review listing draft |
+| `artbook-agent` | Creates a durable case and an artisan-review listing draft |
 | `save-listing-draft` | Saves the reviewed listing and private media references |
 | `request-listing-publication` | Creates a publication approval |
 | `agent-approval` | Executes an explicit approval; moves media to public storage only on publication |
@@ -111,4 +111,4 @@ All deployed functions require a valid Supabase JWT:
 
 ## Upstream attribution
 
-This project reuses and adapts the MIT-licensed [Bagisto Open Source eCommerce Mobile App](https://github.com/bagisto/opensource-ecommerce-mobile-app). The upstream code and its license notices are retained in the repository. DARSH-specific backend, data model, workflows and UI are being developed on the `agent` branch.
+This project reuses and adapts the MIT-licensed [Bagisto Open Source eCommerce Mobile App](https://github.com/bagisto/opensource-ecommerce-mobile-app). The upstream code and its license notices are retained in the repository. ArtBook-specific backend, data model, workflows and UI are being developed on the `agent` branch.
