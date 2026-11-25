@@ -18,10 +18,10 @@ class _ArtBookCategoriesPageState extends State<ArtBookCategoriesPage> {
   bool _loading = true;
   String? _error;
 
-  static const _paper = Color(0xFFFAF7F1);
-  static const _clay = Color(0xFF9A4F36);
-  static const _ink = Color(0xFF28251F);
-  static const _muted = Color(0xFF81796E);
+  static const _paper = Color(0xFFF9F9FB);
+  static const _clay = Color(0xFFEA1A34);
+  static const _ink = Color(0xFF25232A);
+  static const _muted = Color(0xFF77727A);
 
   @override
   void initState() {
@@ -94,7 +94,7 @@ class _ArtBookCategoriesPageState extends State<ArtBookCategoriesPage> {
                             padding: const EdgeInsets.all(22),
                             decoration: BoxDecoration(
                               borderRadius: BorderRadius.circular(26),
-                              gradient: const LinearGradient(colors: [Color(0xFF633B2D), Color(0xFFAD6747)], begin: Alignment.topLeft, end: Alignment.bottomRight),
+                              gradient: const LinearGradient(colors: [Color(0xFFB91436), Color(0xFFAD6747)], begin: Alignment.topLeft, end: Alignment.bottomRight),
                             ),
                             child: const Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
                               Text('ROOTED IN CULTURE', style: TextStyle(color: Color(0xFFFFDCC4), fontSize: 9, fontWeight: FontWeight.w900, letterSpacing: 1.8)),
